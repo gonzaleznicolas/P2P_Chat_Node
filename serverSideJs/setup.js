@@ -14,7 +14,7 @@ function onConnection(socket){
 		console.log('user disconnected');
 	});
 
-	socket.on('chat message', function(msg){
-		console.log('message: ' + msg);
+	socket.on('message from browser', function(msg){
+		console.log('message from browser: ' + msg);
 	});
 }
