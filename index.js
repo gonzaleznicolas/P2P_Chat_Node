@@ -10,6 +10,7 @@ app.get('/', function(req, res){
 	res.sendFile(__dirname + '/index.html');
 });
 
-http.listen(3000, function(){
-	console.log('listening on *:3000');
+http.listen(parseInt(process.argv[2]), function(){
+	console.log('argv[2] == the port to run on == ' + process.argv[2])
+	console.log('listening on *:' + process.argv[2]);
 });
