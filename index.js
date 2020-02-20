@@ -1,6 +1,10 @@
-var app = require('express')();
+let express = require('express');
+let app = express();
 var http = require('http').createServer(app);
 require('./serverSideJs/setup.js')(require('socket.io')(http));
+
+// allow files in public directory to be served as static files
+app.use(express.static('public'));
 
 app.get('/', function(req, res){
 	res.sendFile(__dirname + '/index.html');
