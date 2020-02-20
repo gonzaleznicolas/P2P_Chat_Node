@@ -1,6 +1,6 @@
 let express = require('express');
 let app = express();
-var http = require('http').createServer(app);
+let http = require('http').createServer(app);
 require('./serverSideJs/setup.js')(require('socket.io')(http));
 
 // allow files in public directory to be served as static files
