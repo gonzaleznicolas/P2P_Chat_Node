@@ -88,7 +88,7 @@ function connectAsClientToServer(ipToConnectTo, portToConnectTo){
 function FromOtherServer_NewConnection(obj){
 	console.log("Received new connection message from other server. That server's IP is "+
 		obj.ip+" and its port is "+obj.port);
-	console.log(obj);
+	console.log(this);
 }
 
 function fromOtherServer_Message(msg){
