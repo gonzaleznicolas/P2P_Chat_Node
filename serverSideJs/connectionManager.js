@@ -13,7 +13,7 @@ let myPort;
 let socketToBrowser;
 let myMAC;
 let myUsername;
-let serversInMyChatMap = new Map();
+let serversImConnectedTo = new Map();
 let myIP; // string
 
 function initialize (IO_SERVER, IO_CLIENT, portImRunningOn){
@@ -35,7 +35,7 @@ function initialize (IO_SERVER, IO_CLIENT, portImRunningOn){
 }
 
 function ioServerOnConnection(socketToClient){
-	console.log('a user connected');
+	console.log('someone connected');
 
 	socketToClient.on('disconnect', fromEither_Disconnect);
 
@@ -86,7 +86,8 @@ function connectAsClientToServer(ipToConnectTo, portToConnectTo){
 }
 
 function FromOtherServer_NewConnection(obj){
-	console.log("received new connection message from other server");
+	console.log("Received new connection message from other server. That server's IP is "+
+		obj.ip+" and its port is "+obj.port);
 	console.log(obj);
 }
 
