@@ -17,7 +17,7 @@ let serversInMyChatMap = new Map();
 let myIP; // string
 
 function initialize (IO_SERVER, IO_CLIENT, myPort){
-	//myMAC = networkInterfaces['Wi-Fi'][0].mac;
+	myMAC = networkInterfaces['Wi-Fi'][0].mac;
 
 	(async () => {
 		myIP = await publicIp.v4();
