@@ -1,13 +1,15 @@
 'use strict';
 
 let ioServer;
-let ioClient
+let ioClient;
+let portImRunningOn;
 
 module.exports = {
 	init: initialSetup
 }
 
-function initialSetup (IO_SERVER, IO_CLIENT){
+function initialSetup (IO_SERVER, IO_CLIENT, myPort){
+	portImRunningOn = myPort;
 	ioServer = IO_SERVER;
 	ioServer.on('connection', ioServerOnConnection);
 
