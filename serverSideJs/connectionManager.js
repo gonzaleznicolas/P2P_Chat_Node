@@ -1,6 +1,7 @@
 'use strict';
 
 let networkInterfaces = require('os').networkInterfaces();
+const publicIp = require('public-ip');
 
 module.exports = {
 	init: initialize
@@ -13,14 +14,24 @@ let socketToBrowser;
 let myMAC;
 let myUsername;
 let serversInMyChatMap = new Map();
+let myIP; // string
 
 function initialize (IO_SERVER, IO_CLIENT, myPort){
 	//myMAC = networkInterfaces['Wi-Fi'][0].mac;
+
+	(async () => {
+		myIP = await publicIp.v4();
+		console.log("my ip is:"+myIP)
+	 
+		//console.log(await publicIp.v6());
+	})();
+
 	portImRunningOn = myPort;
 	ioServer = IO_SERVER;
 	ioServer.on('connection', ioServerOnConnection);
 
 	ioClient = IO_CLIENT;
+	
 }
 
 function ioServerOnConnection(socketToClient){
