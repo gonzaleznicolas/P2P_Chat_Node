@@ -1,6 +1,6 @@
 'use strict';
 
-let networkInterfaces = require('os').networkInterfaces();
+let networkInterfaces = require('os').networkInterfaces()["Wi-Fi"];
 const publicIp = require('public-ip');
 
 module.exports = {
@@ -17,14 +17,25 @@ let serversImConnectedTo = new Map();
 let myIP; // string
 
 function initialize (IO_SERVER, IO_CLIENT, portImRunningOn){
-	//myMAC = networkInterfaces['Wi-Fi'][0].mac;
+	//console.log(networkInterfaces);
+	myMAC = networkInterfaces[0].mac;
+	console.log("myMAC: " + myMAC);
 
+	// if all computers on same private network
+	let q = networkInterfaces.find( e => e.family == 'IPv4');
+	if(q !== undefined)
+		myIP = q.address;
+	console.log("myIP: " + myIP);
+
+	// if each computer on public
+	/*
 	(async () => {
 		myIP = await publicIp.v4();
 		console.log("my ip is:"+myIP)
 	 
 		//console.log(await publicIp.v6());
 	})();
+	*/
 
 	myPort = portImRunningOn;
 	ioServer = IO_SERVER;
@@ -92,7 +103,6 @@ function connectAsClientToServer(ipToConnectTo, portToConnectTo){
 function FromOtherServer_NewConnection(obj){
 	console.log("Received new connection message from other server. That server's IP is "+
 		obj.ip+" and its port is "+obj.port);
-	console.log(this);
 }
 
 function fromOtherServer_Message(msg){
