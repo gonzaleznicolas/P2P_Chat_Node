@@ -11,6 +11,7 @@ let ioClient;
 let portImRunningOn;
 let socketToBrowser;
 let myMAC;
+let myUsername;
 
 function initialize (IO_SERVER, IO_CLIENT, myPort){
 	myMAC = networkInterfaces['Wi-Fi'][0].mac;
@@ -37,7 +38,8 @@ function fromEither_Disconnect(){
 	console.log('someone disconnected');
 }
 
-function fromBrowser_ImYourBrowser(){
+function fromBrowser_ImYourBrowser(username){
+	myUsername = username;
 	socketToBrowser = this; // save the socket to the browser so I can send messages at any time
 }
 

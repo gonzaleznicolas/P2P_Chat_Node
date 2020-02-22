@@ -3,7 +3,7 @@ let socket;
 $(function () {
 	socket = io();
 
-	socket.emit('FromBrowser_ImYourBrowser');
+	socket.emit('FromBrowser_ImYourBrowser', "my username");
 
 	socket.on('FromServer_Message', function(msg){
 		console.log("server sent message:");
