@@ -12,6 +12,7 @@ let portImRunningOn;
 let socketToBrowser;
 let myMAC;
 let myUsername;
+let serversInMyChatMap = new Map();
 
 function initialize (IO_SERVER, IO_CLIENT, myPort){
 	myMAC = networkInterfaces['Wi-Fi'][0].mac;
