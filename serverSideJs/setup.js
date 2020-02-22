@@ -3,7 +3,11 @@
 let ioServer;
 let ioClient
 
-module.exports = function (IO_SERVER, IO_CLIENT){
+module.exports = {
+	init: initialSetup
+}
+
+function initialSetup (IO_SERVER, IO_CLIENT){
 	ioServer = IO_SERVER;
 	ioServer.on('connection', ioServerOnConnection);
 

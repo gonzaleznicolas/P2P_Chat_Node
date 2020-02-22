@@ -22,4 +22,4 @@ http.listen(port, function(){
 	console.log('listening on *:' + port);
 });
 
-setup(ioServer, ioClient)
+setup.init(ioServer, ioClient)
