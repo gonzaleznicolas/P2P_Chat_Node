@@ -15,7 +15,7 @@ let myUsername;
 let serversInMyChatMap = new Map();
 
 function initialize (IO_SERVER, IO_CLIENT, myPort){
-	myMAC = networkInterfaces['Wi-Fi'][0].mac;
+	//myMAC = networkInterfaces['Wi-Fi'][0].mac;
 	portImRunningOn = myPort;
 	ioServer = IO_SERVER;
 	ioServer.on('connection', ioServerOnConnection);
@@ -32,6 +32,7 @@ function ioServerOnConnection(socketToClient){
 	socketToClient.on('FromBrowser_ConnectToUser', fromBrowser_ConnectToUser);
 	socketToClient.on('FromBrowser_Message', fromBrowser_Message);
 
+	socketToClient.on('FromOtherServer_NewConnection', FromOtherServer_NewConnection)
 	socketToClient.on('FromOtherServer_Message', fromOtherServer_Message)
 }
 
@@ -66,8 +67,14 @@ function connectAsClientToServer(ipToConnectTo, portToConnectTo){
 	socketToServer.on('connect', function(){
 		console.log("I successfully connected to server running on port.")
 		console.log("I will send it a message...")
-		socketToServer.emit("FromOtherServer_Message", "message sent from server to server")
+		socketToServer.emit("FromOtherServer_NewConnection", {
+
+		})
 	});
+}
+
+function FromOtherServer_NewConnection(obj){
+	console.log("received new connectoin message from other server")
 }
 
 function fromOtherServer_Message(msg){
