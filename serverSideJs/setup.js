@@ -14,6 +14,11 @@ function onConnection(socket){
 		console.log('user disconnected');
 	});
 
+	socket.on('connect to user', function(obj){
+		obj.ip;
+		console.log("port: "+obj.port);
+	});
+
 	socket.on('message from browser', function(msg){
 		console.log('message from browser: ' + msg);
 	});
