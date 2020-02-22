@@ -1,39 +1,55 @@
 'use strict';
 
-let io;
+let ioServer;
 let ioClient
 
-module.exports = function (IO, IO_CLIENT){
-	io = IO;
-	io.on('connection', onConnection);
+module.exports = function (IO_SERVER, IO_CLIENT){
+	ioServer = IO_SERVER;
+	ioServer.on('connection', ioServerOnConnection);
 
 	ioClient = IO_CLIENT;
 }
 
-function onConnection(socket){
+function ioServerOnConnection(socketToClient){
 	console.log('a user connected');
 
-	socket.on('disconnect', function(){
-		console.log('user disconnected');
+	socketToClient.on('disconnect', fromEither_Disconnect);
+
+	socketToClient.on('FromBrowser_ConnectToUser', fromBrowser_ConnectToUser);
+	socketToClient.on('FromBrowser_Message', fromBrowser_Message);
+
+	socketToClient.on('FromOtherServer_Message', fromOtherServer_Message)
+}
+
+function fromEither_Disconnect(){
+	console.log('someone disconnected');
+}
+
+function fromBrowser_ConnectToUser(obj){
+	connectAsClientToServer(obj.ip, obj.port);
+}
+
+function fromBrowser_Message(msg){
+	console.log('MessageFromBrowser: ' + msg);
+}
+
+function connectAsClientToServer(ipToConnectTo, portToConnectTo){
+	console.log("Going to try to connect to server running at ip " + 
+		ipToConnectTo + " on port: "+portToConnectTo);
+
+	let socketToServer = ioClient.connect(
+		"http://" + ipToConnectTo + ":" + portToConnectTo +"/",
+		{reconnection: true}
+	);
+
+	socketToServer.on('connect', function(){
+		console.log("I successfully connected to server running on port.")
+		console.log("I will send it a message...")
+		socketToServer.emit("FromOtherServer_Message", "message sent from server to server")
 	});
+}
 
-	socket.on('connect to user', function(obj){
-		console.log("Going to try to connect to server running at ip " + 
-			obj.ip + " on port: "+obj.port);
-
-		let socketToServer = ioClient.connect("http://localhost:"+obj.port+"/", {
-			reconnection: true
-		});
-
-		socketToServer.on('connect', function(){
-			console.log("I successfully connected to server running on port.")
-			console.log("I will send it a message...")
-			socketToServer.emit("message from browser", "message sent from server to server")
-		});
-
-	});
-
-	socket.on('message from browser', function(msg){
-		console.log('message from browser: ' + msg);
-	});
+function fromOtherServer_Message(msg){
+	console.log("Message from another server:");
+	console.log(msg)
 }

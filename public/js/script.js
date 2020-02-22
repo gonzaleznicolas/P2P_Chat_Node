@@ -4,7 +4,7 @@ $(function () {
 	socket = io();
 	$('form').submit(function(e){
 	  e.preventDefault(); // prevents page reloading
-	  socket.emit('message from browser', $('#m').val());
+	  socket.emit('FromBrowser_Message', $('#m').val());
 	  $('#m').val('');
 	  return false;
 	});
