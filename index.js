@@ -3,7 +3,7 @@ let app = express();
 let http = require('http').createServer(app);
 let ioServer = require('socket.io')(http);
 let ioClient = require('socket.io-client');
-let setup = require('./serverSideJs/setup.js');
+let connectionManager = require('./serverSideJs/connectionManager.js');
 
 const port = parseInt(process.argv[2]);
 if (isNaN(port)){
@@ -22,4 +22,4 @@ http.listen(port, function(){
 	console.log('listening on *:' + port);
 });
 
-setup.init(ioServer, ioClient, port)
+connectionManager.init(ioServer, ioClient, port)
