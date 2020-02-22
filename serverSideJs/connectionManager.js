@@ -83,6 +83,10 @@ function connectAsClientToServer(ipToConnectTo, portToConnectTo){
 			port: myPort
 		})
 	});
+
+	socketToServer.on('disconnect', function(){
+		console.log("the server i was connected to disconnected");
+	})
 }
 
 function FromOtherServer_NewConnection(obj){
