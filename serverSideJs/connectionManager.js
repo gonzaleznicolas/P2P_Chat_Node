@@ -9,14 +9,14 @@ module.exports = {
 
 let ioServer;
 let ioClient;
-let portImRunningOn;
+let myPort;
 let socketToBrowser;
 let myMAC;
 let myUsername;
 let serversInMyChatMap = new Map();
 let myIP; // string
 
-function initialize (IO_SERVER, IO_CLIENT, myPort){
+function initialize (IO_SERVER, IO_CLIENT, portImRunningOn){
 	//myMAC = networkInterfaces['Wi-Fi'][0].mac;
 
 	(async () => {
@@ -26,7 +26,7 @@ function initialize (IO_SERVER, IO_CLIENT, myPort){
 		//console.log(await publicIp.v6());
 	})();
 
-	portImRunningOn = myPort;
+	myPort = portImRunningOn;
 	ioServer = IO_SERVER;
 	ioServer.on('connection', ioServerOnConnection);
 
@@ -79,13 +79,15 @@ function connectAsClientToServer(ipToConnectTo, portToConnectTo){
 		console.log("I successfully connected to server running on port.")
 		console.log("I will send it a message...")
 		socketToServer.emit("FromOtherServer_NewConnection", {
-
+			ip: myIP,
+			port: myPort
 		})
 	});
 }
 
 function FromOtherServer_NewConnection(obj){
-	console.log("received new connectoin message from other server")
+	console.log("received new connection message from other server");
+	console.log(obj);
 }
 
 function fromOtherServer_Message(msg){
