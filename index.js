@@ -1,7 +1,7 @@
 let express = require('express');
 let app = express();
 let http = require('http').createServer(app);
-require('./serverSideJs/setup.js')(require('socket.io')(http));
+require('./serverSideJs/setup.js')(require('socket.io')(http), require('socket.io-client'));
 
 const port = parseInt(process.argv[2]);
 if (isNaN(port)){
