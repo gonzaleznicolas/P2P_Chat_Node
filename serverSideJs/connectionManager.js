@@ -48,8 +48,9 @@ function fromBrowser_ConnectToUser(obj){
 }
 
 function fromBrowser_Message(msg){
+	socketToBrowser = this; // save the socket to the browser so I can send messages at any time
 	console.log('MessageFromBrowser: ' + msg);
-	socketToBrowser.emit("MessageFromServer", "this is me the server responding. Hey!");
+	socketToBrowser.emit("FromServer_Message", "this is me the server responding. Hey!");
 }
 
 function connectAsClientToServer(ipToConnectTo, portToConnectTo){
