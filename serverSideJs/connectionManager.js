@@ -1,5 +1,7 @@
 'use strict';
 
+let networkInterfaces = require('os').networkInterfaces();
+
 module.exports = {
 	init: initialize
 }
@@ -8,8 +10,10 @@ let ioServer;
 let ioClient;
 let portImRunningOn;
 let socketToBrowser;
+let myMAC;
 
 function initialize (IO_SERVER, IO_CLIENT, myPort){
+	myMAC = networkInterfaces['Wi-Fi'][0].mac;
 	portImRunningOn = myPort;
 	ioServer = IO_SERVER;
 	ioServer.on('connection', ioServerOnConnection);
