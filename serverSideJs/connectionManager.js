@@ -54,7 +54,7 @@ function ioServerOnConnection(socketToClient){
 	socketToClient.on('FromBrowser_ConnectToUser', fromBrowser_ConnectToUser);
 	socketToClient.on('FromBrowser_Message', fromBrowser_Message);
 
-	socketToClient.on('FromOtherServer_NewConnection', FromOtherServer_NewConnection)
+	socketToClient.on('FromOtherServer_NewConnection', fromOtherServer_NewConnection)
 	socketToClient.on('FromOtherServer_Message', fromOtherServer_Message)
 }
 
@@ -78,6 +78,9 @@ function fromBrowser_Message(msg){
 }
 
 function connectAsClientToServer(ipToConnectTo, portToConnectTo){
+	if (serversImConnectedTo.has(""+ipToConnectTo+":"+portToConnectTo))
+		return;
+
 	console.log("Going to try to connect to server running at ip " + 
 		ipToConnectTo + " on port: "+portToConnectTo);
 
@@ -87,8 +90,10 @@ function connectAsClientToServer(ipToConnectTo, portToConnectTo){
 	);
 
 	socketToServer.on('connect', function(){
-		console.log("I successfully connected to server running on port.")
-		console.log("I will send it a message...")
+		console.log("I successfully connected to server "+ipToConnectTo+":"+portToConnectTo);
+		serversImConnectedTo.set(""+ipToConnectTo+":"+portToConnectTo, socketToServer);
+		printListOfServersImConnectedTo();
+		console.log("Let "+ipToConnectTo+":"+portToConnectTo+" know I connected to it so it can connect to me...")
 		socketToServer.emit("FromOtherServer_NewConnection", {
 			ip: myIP,
 			port: myPort
@@ -100,12 +105,25 @@ function connectAsClientToServer(ipToConnectTo, portToConnectTo){
 	})
 }
 
-function FromOtherServer_NewConnection(obj){
+function fromOtherServer_NewConnection(obj){
 	console.log("Received new connection message from other server. That server's IP is "+
 		obj.ip+" and its port is "+obj.port);
+	
+	//now that it connected to me, I will connect to it
+	connectAsClientToServer(obj.ip, obj.port);
 }
 
 function fromOtherServer_Message(msg){
 	console.log("Message from another server:");
 	console.log(msg)
+}
+
+function printListOfServersImConnectedTo(){
+	console.log("my connections:");
+	let it = serversImConnectedTo.keys();
+	let result = it.next();
+	while (!result.done) {
+		console.log(result.value);
+		result = it.next();
+	}
 }
