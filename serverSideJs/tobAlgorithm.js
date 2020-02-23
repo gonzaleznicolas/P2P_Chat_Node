@@ -8,14 +8,21 @@ module.exports = {
 	sendUpdate: sendUpdate
 }
 
+let serversImConnectedTo = connectionManager.serversImConnectedTo;
+let myIP = connectionManager.myIP;
+let myPort = connectionManager.myPort;
+let machineIdentifier = connectionManager.machineIdentifier;
+let myTS = connectionManager.myTS;
+
+
 let Q = new PriorityQueue();
 
 function sendUpdate(u){
-	console.log("received this update:");
+	console.log("received this update from my browser:");
 	console.log(u);
+
+	console.log(myTS);
 }
-
-
 
 function compareTimeStamps(a, b){
 	if(a.time != b.time)

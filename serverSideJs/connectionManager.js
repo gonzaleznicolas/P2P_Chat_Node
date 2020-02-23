@@ -12,10 +12,16 @@ let myMAC;
 let myUsername;
 let serversImConnectedTo = new Map();
 let myIP; // string
+let myTS = {time: 0, machineIdentifier: ""}
+
 
 module.exports = {
 	initialize: initialize,
-	serversImConnectedTo: serversImConnectedTo
+	serversImConnectedTo: serversImConnectedTo,
+	myIP: myIP,
+	myPort: myPort,
+	machineIdentifier: machineIdentifier,
+	myTS: myTS
 }
 
 function initialize (IO_SERVER, IO_CLIENT, portImRunningOn){
@@ -41,10 +47,14 @@ function initialize (IO_SERVER, IO_CLIENT, portImRunningOn){
 
 	myPort = portImRunningOn;
 	ioServer = IO_SERVER;
+
 	ioServer.on('connection', ioServerOnConnection);
 
 	ioClient = IO_CLIENT;
-	
+
+	myTS.time = 0;
+	myTS.machineIdentifier = machineIdentifier(myIP, myPort);
+	connectToSelf();
 }
 
 function ioServerOnConnection(socketToClient){
@@ -109,39 +119,6 @@ function fromBrowser_GiveUpdate(update){
 	tobAlgorithm.sendUpdate(update);
 }
 
-function connectAsClientToServer(ipToConnectTo, portToConnectTo){
-	if (serversImConnectedTo.has(machineIdentifier(ipToConnectTo, portToConnectTo)))
-		return;
-
-	console.log("Going to try to connect to server running at ip " + 
-		ipToConnectTo + " on port: "+portToConnectTo);
-
-	let socketToServer = ioClient.connect(
-		"http://" + ipToConnectTo + ":" + portToConnectTo +"/",
-		{reconnection: true}
-	);
-
-	socketToServer.on('connect', function(){
-		console.log("I successfully connected to server "+machineIdentifier(ipToConnectTo, portToConnectTo));
-		serversImConnectedTo.set(machineIdentifier(ipToConnectTo, portToConnectTo), {
-			ip: ipToConnectTo,
-			port: portToConnectTo,
-			socket: socketToServer
-		});
-		printListOfServersImConnectedTo();
-		console.log("Let "+machineIdentifier(ipToConnectTo, portToConnectTo)+" know I connected to it so it can connect to me...")
-		socketToServer.emit("FromOtherServer_NewConnection", {
-			ip: myIP,
-			port: myPort,
-			allServerConnections: compileArrayOfServersImConnectedTo()
-		})
-	});
-
-	socketToServer.on('disconnect', function(){
-		console.log("the server i was connected to disconnected");
-	})
-}
-
 function fromOtherServer_NewConnection(obj){
 	console.log("Received new connection message from other server. That server's IP is "+
 		obj.ip+" and its port is "+obj.port);
@@ -159,6 +136,61 @@ function fromOtherServer_NewConnection(obj){
 function fromOtherServer_Message(obj){
 	console.log("Message from server "+ machineIdentifier(obj.fromIp, obj.fromPort)+" :");
 	console.log(obj.msg)
+}
+
+function connectAsClientToServer(ipToConnectTo, portToConnectTo){
+	if (serversImConnectedTo.has(machineIdentifier(ipToConnectTo, portToConnectTo)))
+		return;
+
+	console.log("Going to try to connect to server running at ip " + 
+		ipToConnectTo + " on port: "+portToConnectTo);
+
+	let socketToServer = ioClient.connect(
+		"http://" + ipToConnectTo + ":" + portToConnectTo +"/",
+		{reconnection: true}
+	);
+
+	socketToServer.on('connect', function(){
+		console.log("I successfully connected to server "+machineIdentifier(ipToConnectTo, portToConnectTo));
+		serversImConnectedTo.set(machineIdentifier(ipToConnectTo, portToConnectTo), {
+			ip: ipToConnectTo,
+			port: portToConnectTo,
+			socket: socketToServer,
+			TS: {time: 0, machineIdentifier: machineIdentifier(ipToConnectTo, portToConnectTo)}
+		});
+		printListOfServersImConnectedTo();
+		console.log("Let "+machineIdentifier(ipToConnectTo, portToConnectTo)+" know I connected to it so it can connect to me...")
+		socketToServer.emit("FromOtherServer_NewConnection", {
+			ip: myIP,
+			port: myPort,
+			allServerConnections: compileArrayOfServersImConnectedTo()
+		})
+	});
+
+	socketToServer.on('disconnect', function(){
+		console.log("the server i was connected to disconnected");
+	})
+}
+
+function connectToSelf(){
+	if (serversImConnectedTo.has(machineIdentifier(myIP, myPort)))
+		return;
+
+	let socketToSelf = ioClient.connect(
+		"http://" + myIP + ":" + myPort +"/",
+		{reconnection: true}
+	);
+
+	socketToSelf.on('connect', function(){
+		console.log("I successfully connected to myself.");
+		serversImConnectedTo.set(machineIdentifier(myIP, myPort), {
+			ip: myIP,
+			port: myPort,
+			socket: socketToSelf,
+			TS: myTS
+		});
+		printListOfServersImConnectedTo();
+	});
 }
 
 function printListOfServersImConnectedTo(){
