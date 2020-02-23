@@ -5,7 +5,7 @@ $(function () {
 
 	socket.emit('FromBrowser_ImYourBrowser', "my username");
 
-	socket.on('FromServer_Message', function(msg){
+	socket.on('FromServerToBrowser_Message', function(msg){
 		console.log("server sent message:");
 		console.log(msg);
 	});

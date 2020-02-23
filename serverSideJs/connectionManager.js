@@ -52,6 +52,7 @@ function ioServerOnConnection(socketToClient){
 
 	socketToClient.on('FromBrowser_ImYourBrowser', fromBrowser_ImYourBrowser);
 	socketToClient.on('FromBrowser_ConnectToUser', fromBrowser_ConnectToUser);
+	socketToClient.on('FromBrowser_SendMessageTo', fromBrowser_SendMessageTo);
 	socketToClient.on('FromBrowser_Message', fromBrowser_Message);
 
 	socketToClient.on('FromOtherServer_NewConnection', fromOtherServer_NewConnection)
@@ -74,7 +75,20 @@ function fromBrowser_ConnectToUser(obj){
 function fromBrowser_Message(msg){
 	socketToBrowser = this; // save the socket to the browser so I can send messages at any time
 	console.log('MessageFromBrowser: ' + msg);
-	socketToBrowser.emit("FromServer_Message", "this is me the server responding. Hey!");
+	socketToBrowser.emit("FromServerToBrowser_Message", "this is me the server responding. Hey!");
+}
+
+function fromBrowser_SendMessageTo(obj /* {toIp, toPort, msg} */){
+	let serverToSendMessageTo = serversImConnectedTo.get(machineIdentifier(obj.toIp, obj.toPort));
+	if(serverToSendMessageTo == undefined){
+		console.log("Not connected to that server.");
+		return;
+	}
+	serverToSendMessageTo.socket.emit('FromOtherServer_Message', {
+		fromIp: myIP,
+		fromPort: myPort,
+		msg: obj.msg
+	});
 }
 
 function connectAsClientToServer(ipToConnectTo, portToConnectTo){
@@ -125,9 +139,9 @@ function fromOtherServer_NewConnection(obj){
 	});
 }
 
-function fromOtherServer_Message(msg){
-	console.log("Message from another server:");
-	console.log(msg)
+function fromOtherServer_Message(obj){
+	console.log("Message from server "+ machineIdentifier(obj.fromIp, obj.fromPort)+" :");
+	console.log(obj.msg)
 }
 
 function printListOfServersImConnectedTo(){
