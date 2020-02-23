@@ -2,10 +2,7 @@
 
 let networkInterfaces = require('os').networkInterfaces()["Wi-Fi"];
 const publicIp = require('public-ip');
-
-module.exports = {
-	initialize: initialize
-}
+const tobAlgorithm = require('./tobAlgorithm.js');
 
 let ioServer;
 let ioClient;
@@ -15,6 +12,11 @@ let myMAC;
 let myUsername;
 let serversImConnectedTo = new Map();
 let myIP; // string
+
+module.exports = {
+	initialize: initialize,
+	serversImConnectedTo: serversImConnectedTo
+}
 
 function initialize (IO_SERVER, IO_CLIENT, portImRunningOn){
 	//console.log(networkInterfaces);
@@ -55,6 +57,7 @@ function ioServerOnConnection(socketToClient){
 	socketToClient.on('FromBrowser_SendMessageTo', fromBrowser_SendMessageTo);
 	socketToClient.on('FromBrowser_BroadcastMessage', fromBrowser_BroadcastMessage);
 	socketToClient.on('FromBrowser_Message', fromBrowser_Message);
+	socketToClient.on('FromBrowser_GiveUpdate', fromBrowser_GiveUpdate);
 
 	socketToClient.on('FromOtherServer_NewConnection', fromOtherServer_NewConnection)
 	socketToClient.on('FromOtherServer_Message', fromOtherServer_Message)
@@ -100,6 +103,10 @@ function fromBrowser_BroadcastMessage(message){
 			msg: message
 		});
 	});
+}
+
+function fromBrowser_GiveUpdate(update){
+	tobAlgorithm.sendUpdate(update);
 }
 
 function connectAsClientToServer(ipToConnectTo, portToConnectTo){

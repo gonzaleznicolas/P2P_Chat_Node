@@ -1,12 +1,21 @@
 'use strict';
 
 let connectionManager = require('./connectionManager.js');
+let PriorityQueue = require('./priorityQueue.js');
 
 module.exports = {
-	compareTimeStamps: compareTimeStamps
+	compareTimeStamps: compareTimeStamps,
+	sendUpdate: sendUpdate
 }
 
-let TS = [0, 0, 0, 0];
+let Q = new PriorityQueue();
+
+function sendUpdate(u){
+	console.log("received this update:");
+	console.log(u);
+}
+
+
 
 function compareTimeStamps(a, b){
 	if(a.time != b.time)
