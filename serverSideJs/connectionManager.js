@@ -53,6 +53,7 @@ function ioServerOnConnection(socketToClient){
 	socketToClient.on('FromBrowser_ImYourBrowser', fromBrowser_ImYourBrowser);
 	socketToClient.on('FromBrowser_ConnectToUser', fromBrowser_ConnectToUser);
 	socketToClient.on('FromBrowser_SendMessageTo', fromBrowser_SendMessageTo);
+	socketToClient.on('FromBrowser_BroadcastMessage', fromBrowser_BroadcastMessage);
 	socketToClient.on('FromBrowser_Message', fromBrowser_Message);
 
 	socketToClient.on('FromOtherServer_NewConnection', fromOtherServer_NewConnection)
@@ -88,6 +89,16 @@ function fromBrowser_SendMessageTo(obj /* {toIp, toPort, msg} */){
 		fromIp: myIP,
 		fromPort: myPort,
 		msg: obj.msg
+	});
+}
+
+function fromBrowser_BroadcastMessage(message){
+	serversImConnectedTo.forEach(function (server){
+		server.socket.emit('FromOtherServer_Message', {
+			fromIp: myIP,
+			fromPort: myPort,
+			msg: message
+		});
 	});
 }
 
@@ -132,10 +143,9 @@ function fromOtherServer_NewConnection(obj){
 	//except myself
 	connectAsClientToServer(obj.ip, obj.port); // first connect to server that just connected to me
 												// it wont be in the list it sent me
-	// connect to everything it is connected to (except myself)
+	// connect to everything it is connected to (including myself - TOB algorithm calls for broadcasts that include self)
 	obj.allServerConnections.forEach( function(c) {
-		if (!(c.ip === myIP && c.port === myPort))
-			connectAsClientToServer(c.ip, c.port);
+		connectAsClientToServer(c.ip, c.port);
 	});
 }
 
