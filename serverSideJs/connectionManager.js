@@ -4,7 +4,7 @@ let networkInterfaces = require('os').networkInterfaces()["Wi-Fi"];
 const publicIp = require('public-ip');
 
 module.exports = {
-	init: initialize
+	initialize: initialize
 }
 
 let ioServer;
