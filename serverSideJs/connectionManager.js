@@ -78,7 +78,7 @@ function fromBrowser_Message(msg){
 }
 
 function connectAsClientToServer(ipToConnectTo, portToConnectTo){
-	if (serversImConnectedTo.has(""+ipToConnectTo+":"+portToConnectTo))
+	if (serversImConnectedTo.has(machineIdentifier(ipToConnectTo, portToConnectTo)))
 		return;
 
 	console.log("Going to try to connect to server running at ip " + 
@@ -90,10 +90,10 @@ function connectAsClientToServer(ipToConnectTo, portToConnectTo){
 	);
 
 	socketToServer.on('connect', function(){
-		console.log("I successfully connected to server "+ipToConnectTo+":"+portToConnectTo);
-		serversImConnectedTo.set(""+ipToConnectTo+":"+portToConnectTo, socketToServer);
+		console.log("I successfully connected to server "+machineIdentifier(ipToConnectTo, portToConnectTo));
+		serversImConnectedTo.set(machineIdentifier(ipToConnectTo, portToConnectTo), socketToServer);
 		printListOfServersImConnectedTo();
-		console.log("Let "+ipToConnectTo+":"+portToConnectTo+" know I connected to it so it can connect to me...")
+		console.log("Let "+machineIdentifier(ipToConnectTo, portToConnectTo)+" know I connected to it so it can connect to me...")
 		socketToServer.emit("FromOtherServer_NewConnection", {
 			ip: myIP,
 			port: myPort
@@ -126,4 +126,8 @@ function printListOfServersImConnectedTo(){
 		console.log(result.value);
 		result = it.next();
 	}
+}
+
+function machineIdentifier(ip, port){
+	return ""+ip+":"+port;
 }
