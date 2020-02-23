@@ -3,7 +3,7 @@ let app = express();
 let http = require('http').createServer(app);
 let ioServer = require('socket.io')(http);
 let ioClient = require('socket.io-client');
-let connectionManager = require('./serverSideJs/connectionManager.js');
+let chatLogic = require('./serverSideJs/chatLogic.js');
 
 const port = parseInt(process.argv[2]);
 if (isNaN(port)){
@@ -22,4 +22,4 @@ http.listen(port, function(){
 	console.log('listening on *:' + port);
 });
 
-connectionManager.initialize(ioServer, ioClient, port)
+chatLogic.initialize(ioServer, ioClient, port)

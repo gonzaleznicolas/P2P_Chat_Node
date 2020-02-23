@@ -1,6 +1,4 @@
 'use strict';
-
-let tobAlgorithm = require('./tobAlgorithm.js');
  
 module.exports = class PriorityQueue 
 { 
@@ -24,7 +22,7 @@ module.exports = class PriorityQueue
 	enqueue(update)
 	{
 		this._array.push(update);
-		this._array.sort(tobAlgorithm.compareTimeStamps)
+		this._array.sort(compareTimeStamps)
 	}
 
 	dequeue()
@@ -34,4 +32,17 @@ module.exports = class PriorityQueue
 		return u;
 	}
 
+}
+
+function compareTimeStamps(a, b){
+	if(a.time != b.time)
+		return a.time - b.time;
+	else{
+		if (a.machineIdentifier < b.machineIdentifier)
+			return -1;
+		else if (a.machineIdentifier > b.machineIdentifier)
+			return 1;
+		else
+			return 0;
+	}
 }

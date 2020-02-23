@@ -1,28 +1,26 @@
 'use strict';
 
-let networkInterfaces = require('os').networkInterfaces()["Wi-Fi"];
+const networkInterfaces = require('os').networkInterfaces()["Wi-Fi"];
 const publicIp = require('public-ip');
-const tobAlgorithm = require('./tobAlgorithm.js');
+const PriorityQueue = require('./priorityQueue.js');
+
+module.exports = {
+	initialize: initialize
+}
 
 let ioServer;
 let ioClient;
-let myPort;
 let socketToBrowser;
+
+let myPort;
 let myMAC;
-let myUsername;
-let serversImConnectedTo = new Map();
 let myIP; // string
+let myUsername;
+
+let serversImConnectedTo = new Map();
 let myTS = {time: 0, machineIdentifier: ""}
+let Q = new PriorityQueue();
 
-
-module.exports = {
-	initialize: initialize,
-	serversImConnectedTo: serversImConnectedTo,
-	myIP: myIP,
-	myPort: myPort,
-	machineIdentifier: machineIdentifier,
-	myTS: myTS
-}
 
 function initialize (IO_SERVER, IO_CLIENT, portImRunningOn){
 	//console.log(networkInterfaces);
@@ -77,6 +75,10 @@ function fromEither_Disconnect(){
 	console.log('someone disconnected');
 }
 
+/********************************************************
+FROM BROWSER EVENT HANDLERS
+********************************************************/ 
+
 function fromBrowser_ImYourBrowser(username){
 	myUsername = username;
 	socketToBrowser = this; // save the socket to the browser so I can send messages at any time
@@ -116,8 +118,12 @@ function fromBrowser_BroadcastMessage(message){
 }
 
 function fromBrowser_GiveUpdate(update){
-	tobAlgorithm.sendUpdate(update);
+	tobSendUpdate(update);
 }
+
+/********************************************************
+FROM OTHER SERVER EVENT HANDLERS
+********************************************************/ 
 
 function fromOtherServer_NewConnection(obj){
 	console.log("Received new connection message from other server. That server's IP is "+
@@ -134,9 +140,13 @@ function fromOtherServer_NewConnection(obj){
 }
 
 function fromOtherServer_Message(obj){
-	console.log("Message from server "+ machineIdentifier(obj.fromIp, obj.fromPort)+" :");
+	console.log("Message from server "+ machineIdentifier(obj.fromIp, obj.fromPort));
 	console.log(obj.msg)
 }
+
+/********************************************************
+CONNECTION FUNCTIONS
+********************************************************/ 
 
 function connectAsClientToServer(ipToConnectTo, portToConnectTo){
 	if (serversImConnectedTo.has(machineIdentifier(ipToConnectTo, portToConnectTo)))
@@ -193,6 +203,21 @@ function connectToSelf(){
 	});
 }
 
+/********************************************************
+TOB ALGORITHM LOGIC
+********************************************************/ 
+
+function tobSendUpdate(u){
+	console.log("received this update from my browser:");
+	console.log(u);
+
+	console.log(myTS);	
+}
+
+/********************************************************
+ HELPER FUNCTIONS
+********************************************************/ 
+
 function printListOfServersImConnectedTo(){
 	console.log("my connections:");
 	let it = serversImConnectedTo.keys();
@@ -216,4 +241,17 @@ function compileArrayOfServersImConnectedTo(){
 
 function machineIdentifier(ip, port){
 	return ""+ip+":"+port;
+}
+
+function compareTimeStamps(a, b){
+	if(a.time != b.time)
+		return a.time - b.time;
+	else{
+		if (a.machineIdentifier < b.machineIdentifier)
+			return -1;
+		else if (a.machineIdentifier > b.machineIdentifier)
+			return 1;
+		else
+			return 0;
+	}
 }
