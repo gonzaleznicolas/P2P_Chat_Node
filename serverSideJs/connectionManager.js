@@ -91,12 +91,17 @@ function connectAsClientToServer(ipToConnectTo, portToConnectTo){
 
 	socketToServer.on('connect', function(){
 		console.log("I successfully connected to server "+machineIdentifier(ipToConnectTo, portToConnectTo));
-		serversImConnectedTo.set(machineIdentifier(ipToConnectTo, portToConnectTo), socketToServer);
+		serversImConnectedTo.set(machineIdentifier(ipToConnectTo, portToConnectTo), {
+			ip: ipToConnectTo,
+			port: portToConnectTo,
+			socket: socketToServer
+		});
 		printListOfServersImConnectedTo();
 		console.log("Let "+machineIdentifier(ipToConnectTo, portToConnectTo)+" know I connected to it so it can connect to me...")
 		socketToServer.emit("FromOtherServer_NewConnection", {
 			ip: myIP,
-			port: myPort
+			port: myPort,
+			allServerConnections: compileArrayOfServersImConnectedTo()
 		})
 	});
 
@@ -109,8 +114,15 @@ function fromOtherServer_NewConnection(obj){
 	console.log("Received new connection message from other server. That server's IP is "+
 		obj.ip+" and its port is "+obj.port);
 	
-	//now that it connected to me, I will connect to it
-	connectAsClientToServer(obj.ip, obj.port);
+	//now that it connected to me, I will connect to everything it is connected to
+	//except myself
+	connectAsClientToServer(obj.ip, obj.port); // first connect to server that just connected to me
+												// it wont be in the list it sent me
+	// connect to everything it is connected to (except myself)
+	obj.allServerConnections.forEach( function(c) {
+		if (!(c.ip === myIP && c.port === myPort))
+			connectAsClientToServer(c.ip, c.port);
+	});
 }
 
 function fromOtherServer_Message(msg){
@@ -126,6 +138,17 @@ function printListOfServersImConnectedTo(){
 		console.log(result.value);
 		result = it.next();
 	}
+}
+
+function compileArrayOfServersImConnectedTo(){
+	let array = [];
+	let it = serversImConnectedTo.values();
+	let result = it.next();
+	while (!result.done) {
+		array.push({ip: result.value.ip, port: result.value.port});
+		result = it.next();
+	}
+	return array;
 }
 
 function machineIdentifier(ip, port){
