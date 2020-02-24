@@ -233,7 +233,7 @@ function tobSendUpdate(u){
 
 function tobReceiveMessage(obj){
 	let from = serversImConnectedTo.get(machineIdentifier(obj.fromIp, obj.fromPort));
-	from.TS = obj.TS;
+	from.TS.time = obj.TS.time;
 
 	let isMessage = (obj.type == "message");
 
@@ -275,7 +275,8 @@ function tobApplyUpdates(){
 	let itr = serversImConnectedTo.values();
 	let result = itr.next();
 	while (!result.done) {
-		if ( compareTimeStamps(uts, result.value.TS) > 0 )
+		console.log("process "+result.value.port+" has time "+result.value.TS.time);
+		if ( uts.time > result.value.TS.time )
 			utsIsSmallest = false;
 		result = itr.next();
 	}
