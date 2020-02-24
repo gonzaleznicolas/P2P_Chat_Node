@@ -53,6 +53,8 @@ function initialize (IO_SERVER, IO_CLIENT, portImRunningOn){
 	myTS.time = 0;
 	myTS.machineIdentifier = machineIdentifier(myIP, myPort);
 	connectToSelf();
+
+	setInterval( tobApplyUpdates, 6000);
 }
 
 function ioServerOnConnection(socketToClient){
@@ -67,8 +69,9 @@ function ioServerOnConnection(socketToClient){
 	socketToClient.on('FromBrowser_Message', fromBrowser_Message);
 	socketToClient.on('FromBrowser_GiveUpdate', fromBrowser_GiveUpdate);
 
-	socketToClient.on('FromOtherServer_NewConnection', fromOtherServer_NewConnection)
-	socketToClient.on('FromOtherServer_Message', fromOtherServer_Message)
+	socketToClient.on('FromOtherServer_NewConnection', fromOtherServer_NewConnection);
+	socketToClient.on('FromOtherServer_Message', fromOtherServer_Message);
+	socketToClient.on('FromOtherServer_TOB_Message', fromOtherServer_TOB_Message)
 }
 
 function fromEither_Disconnect(){
@@ -144,6 +147,10 @@ function fromOtherServer_Message(obj){
 	console.log(obj.msg)
 }
 
+function fromOtherServer_TOB_Message(obj){
+	tobReceiveMessage(obj);
+}
+
 /********************************************************
 CONNECTION FUNCTIONS
 ********************************************************/ 
@@ -211,7 +218,74 @@ function tobSendUpdate(u){
 	console.log("received this update from my browser:");
 	console.log(u);
 
-	console.log(myTS);	
+	myTS.time = myTS.time+1;
+	
+	serversImConnectedTo.forEach(function (server){
+		server.socket.emit('FromOtherServer_TOB_Message', {
+			fromIp: myIP,
+			fromPort: myPort,
+			type: "message", // "message or ack"
+			message: u,
+			TS: myTS
+		});
+	});
+}
+
+function tobReceiveMessage(obj){
+	let from = serversImConnectedTo.get(machineIdentifier(obj.fromIp, obj.fromPort));
+	from.TS = obj.TS;
+
+	let isMessage = (obj.type == "message");
+
+	if (isMessage)
+		Q.enqueue(obj);
+	
+	if (obj.TS.time > myTS.time){
+		myTS.time = obj.TS.time;
+
+		serversImConnectedTo.forEach(function (server){
+			if( !(server.ip == myIP && server.port == myPort) ){
+				server.socket.emit('FromOtherServer_TOB_Message', {
+					fromIp: myIP,
+					fromPort: myPort,
+					type: "ack", // "message or ack"
+					TS: myTS
+				});
+			}
+		});
+	}
+}
+
+// executes every second
+function tobApplyUpdates(){
+	Q.print();
+
+	let update = Q.head();
+	if (update == -1){
+		//console.log("nothing");
+		return; // queue is empty
+	}
+
+	let uts = update.TS
+
+	console.log("myTS time: "+ myTS.time+" myTS mi: "+ myTS.machineIdentifier);
+
+	// see if uts <= the TS of all servers im connected to
+	let utsIsSmallest = true;
+	let itr = serversImConnectedTo.values();
+	let result = itr.next();
+	while (!result.done) {
+		if ( compareTimeStamps(uts, result.value.TS) > 0 )
+			utsIsSmallest = false;
+		result = itr.next();
+	}
+
+	if(utsIsSmallest){
+		Q.dequeue();
+		console.log("APPLYING UPDATE:");
+		console.log(update);
+	}
+
 }
 
 /********************************************************
@@ -254,4 +328,8 @@ function compareTimeStamps(a, b){
 		else
 			return 0;
 	}
+}
+
+function tsCopy(ts){
+	return {time: ts.time, machineIdentifier: ts.machineIdentifier};
 }
