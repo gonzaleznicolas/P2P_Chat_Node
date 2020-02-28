@@ -19,7 +19,7 @@ app.get('/', function(req, res){
 });
 
 http.listen(port, function(){
-	console.log('listening on *:' + port);
+	console.log(new Date().getTime(), 'listening on *:' + port);
 });
 
 chatLogic.initialize(ioServer, ioClient, port)

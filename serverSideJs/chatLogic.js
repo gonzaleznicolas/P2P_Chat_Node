@@ -23,9 +23,9 @@ let Q = new PriorityQueue();
 function initialize (IO_SERVER, IO_CLIENT, portImRunningOn){
 
 	myIP = getIPAddressOfThisMachine();
-	console.log("myIP: " + myIP);
+	console.log(new Date().getTime(), "myIP: " + myIP);
 	myPort = portImRunningOn;
-	console.log("myPort: " + myPort);
+	console.log(new Date().getTime(), "myPort: " + myPort);
 
 	ioServer = IO_SERVER;
 	ioServer.on('connection', ioServerOnConnection);
@@ -41,7 +41,7 @@ function initialize (IO_SERVER, IO_CLIENT, portImRunningOn){
 }
 
 function ioServerOnConnection(socketToClient){
-	console.log('someone connected');
+	console.log(new Date().getTime(), 'Someone connected');
 
 	socketToClient.on('disconnect', fromEither_Disconnect);
 
@@ -54,7 +54,7 @@ function ioServerOnConnection(socketToClient){
 }
 
 function fromEither_Disconnect(){
-	console.log('someone disconnected');
+	console.log(new Date().getTime(), 'Someone disconnected');
 }
 
 /********************************************************
@@ -64,10 +64,11 @@ FROM BROWSER EVENT HANDLERS
 function fromBrowser_ImYourBrowser(username){
 	myUsername = username;
 	socketToBrowser = this; // save the socket to the browser so I can send messages at any time
-	console.log("Browser has connected. Username selected is ", myUsername)
+	console.log(new Date().getTime(), "Browser has connected. Username selected is ", myUsername)
 }
 
 function fromBrowser_ConnectToServer(obj){
+	console.log(new Date().getTime(), "My browser has asked me to connect to ", serverIdentifier(obj.ip, obj.port));
 	connectAsClientToServer(obj.ip, obj.port);
 }
 
@@ -80,7 +81,7 @@ FROM OTHER SERVER EVENT HANDLERS
 ********************************************************/ 
 
 function fromOtherServer_iJustConnectedToYou(obj){
-	console.log("Server ", serverIdentifier(obj.ip, obj.port), " just connected to me.");
+	console.log(new Date().getTime(), "Server ", serverIdentifier(obj.ip, obj.port), " just connected to me.");
 	
 	// connect to everything it is connected to (including myself - TOB algorithm calls for broadcasts that include self)
 	obj.allServerConnections.forEach( function(c) {
@@ -100,7 +101,7 @@ function connectAsClientToServer(ipToConnectTo, portToConnectTo){
 	if (serversImConnectedTo.has(serverIdentifier(ipToConnectTo, portToConnectTo)))
 		return;
 
-	console.log("Going to try to connect to server ", serverIdentifier(ipToConnectTo, portToConnectTo));
+	console.log(new Date().getTime(), "Going to try to connect to server ", serverIdentifier(ipToConnectTo, portToConnectTo));
 
 	let socketToServer = ioClient.connect(
 		"http://" + ipToConnectTo + ":" + portToConnectTo +"/",
@@ -108,7 +109,7 @@ function connectAsClientToServer(ipToConnectTo, portToConnectTo){
 	);
 
 	socketToServer.on('connect', function(){
-		console.log("I successfully connected to server "+serverIdentifier(ipToConnectTo, portToConnectTo));
+		console.log(new Date().getTime(), "I successfully connected to server "+serverIdentifier(ipToConnectTo, portToConnectTo));
 		serversImConnectedTo.set(serverIdentifier(ipToConnectTo, portToConnectTo), {
 			ip: ipToConnectTo,
 			port: portToConnectTo,
@@ -124,7 +125,7 @@ function connectAsClientToServer(ipToConnectTo, portToConnectTo){
 	});
 
 	socketToServer.on('disconnect', function(){
-		console.log("the server i was connected to disconnected");
+		console.log("The server I was connected to disconnected");
 	})
 }
 
@@ -138,7 +139,7 @@ function connectToSelf(){
 	);
 
 	socketToSelf.on('connect', function(){
-		console.log("I successfully connected to myself.");
+		console.log(new Date().getTime(), "I successfully connected to myself.");
 		serversImConnectedTo.set(serverIdentifier(myIP, myPort), {
 			ip: myIP,
 			port: myPort,
@@ -154,8 +155,8 @@ TOB ALGORITHM LOGIC
 ********************************************************/ 
 
 function tobSendUpdate(u){
-	console.log("received this update from my browser:");
-	console.log(u);
+	console.log(new Date().getTime(), "Received this update from my browser:");
+	console.log(new Date().getTime(), u);
 
 	myTS.time = myTS.time+1;
 	
@@ -201,20 +202,20 @@ function tobApplyUpdates(){
 
 	let update = Q.head();
 	if (update == -1){
-		//console.log("nothing");
+		//console.log(new Date().getTime(), "nothing");
 		return; // queue is empty
 	}
 
 	let uts = update.TS
 
-	console.log("myTS time: "+ myTS.time+" myTS mi: "+ myTS.serverIdentifier);
+	console.log(new Date().getTime(), "myTS time: "+ myTS.time+" myTS mi: "+ myTS.serverIdentifier);
 
 	// see if uts <= the TS of all servers im connected to
 	let utsIsSmallest = true;
 	let itr = serversImConnectedTo.values();
 	let result = itr.next();
 	while (!result.done) {
-		console.log("process "+result.value.port+" has time "+result.value.TS.time);
+		console.log(new Date().getTime(), "Process "+result.value.port+" has time "+result.value.TS.time);
 		if ( uts.time > result.value.TS.time )
 			utsIsSmallest = false;
 		result = itr.next();
@@ -222,8 +223,8 @@ function tobApplyUpdates(){
 
 	if(utsIsSmallest){
 		Q.dequeue();
-		console.log("APPLYING UPDATE:");
-		console.log(update);
+		console.log(new Date().getTime(), "APPLYING UPDATE:");
+		console.log(new Date().getTime(), update);
 	}
 
 }
@@ -233,11 +234,11 @@ function tobApplyUpdates(){
 ********************************************************/ 
 
 function printListOfServersImConnectedTo(){
-	console.log("my connections:");
+	console.log(new Date().getTime(), "My connections:");
 	let it = serversImConnectedTo.keys();
 	let result = it.next();
 	while (!result.done) {
-		console.log(result.value);
+		console.log(new Date().getTime(), result.value);
 		result = it.next();
 	}
 }
