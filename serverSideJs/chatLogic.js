@@ -1,6 +1,6 @@
 'use strict';
 
-const networkInterfaces = require('os').networkInterfaces()["Wi-Fi"];
+const networkInterfaces = require('os').networkInterfaces();
 const PriorityQueue = require('./priorityQueue.js');
 
 module.exports = {
@@ -12,7 +12,6 @@ let ioClient;
 let socketToBrowser;
 
 let myPort;
-let myMAC;
 let myIP; // string
 let myUsername;
 
@@ -22,9 +21,7 @@ let Q = new PriorityQueue();
 
 
 function initialize (IO_SERVER, IO_CLIENT, portImRunningOn){
-	//console.log(networkInterfaces);
-	myMAC = networkInterfaces[0].mac;
-	console.log("myMAC: " + myMAC);
+	console.log(networkInterfaces);
 
 	// if all computers on same private network
 	let q = networkInterfaces.find( e => e.family == 'IPv4');
