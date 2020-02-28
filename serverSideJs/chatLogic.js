@@ -48,9 +48,11 @@ function ioServerOnConnection(socketToClient){
 	socketToClient.on('FromBrowser_ImYourBrowser', fromBrowser_ImYourBrowser);
 	socketToClient.on('FromBrowser_ConnectToServer', fromBrowser_ConnectToServer);
 	socketToClient.on('FromBrowser_GiveTobUpdate', fromBrowser_GiveTobUpdate);
+	socketToClient.on('FromBrowser_SendMessageToSpecificServer', fromBrowser_SendMessageToSpecificServer);
 
 	socketToClient.on('FromOtherServer_iJustConnectedToYou', fromOtherServer_iJustConnectedToYou);
 	socketToClient.on('FromOtherServer_TobMessageOrAck', fromOtherServer_TobMessageOrAck)
+	socketToClient.on('FromOtherServer_MessageToSpecificServer', fromOtherServer_MessageToSpecificServer)
 }
 
 function fromEither_Disconnect(){
@@ -76,6 +78,22 @@ function fromBrowser_GiveTobUpdate(update){
 	tobSendUpdate(update);
 }
 
+function fromBrowser_SendMessageToSpecificServer(obj /* {toIp, toPort, msg} */){
+	let serverToSendMessageTo = serversImConnectedTo.get(serverIdentifier(obj.toIp, obj.toPort));
+	if(serverToSendMessageTo == undefined){
+		console.log("Not connected to that server.");
+		return;
+	}
+
+	console.log(new Date().getTime(), "I will send the following message to server ", serverIdentifier(obj.toIp, obj.toPort), ":");
+	console.log(new Date().getTime(), obj.msg);
+	serverToSendMessageTo.socket.emit('FromOtherServer_MessageToSpecificServer', {
+		fromIp: myIP,
+		fromPort: myPort,
+		msg: obj.msg
+	});
+}
+
 /********************************************************
 FROM OTHER SERVER EVENT HANDLERS
 ********************************************************/ 
@@ -91,6 +109,11 @@ function fromOtherServer_iJustConnectedToYou(obj){
 
 function fromOtherServer_TobMessageOrAck(obj){
 	tobReceiveMessageOrAck(obj);
+}
+
+function fromOtherServer_MessageToSpecificServer(obj){
+	console.log(new Date().getTime(), "Server ", serverIdentifier(obj.fromIp, obj.fromPort), " sent me the message:");
+	console.log(new Date().getTime(), obj.msg);
 }
 
 /********************************************************
