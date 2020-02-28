@@ -114,10 +114,6 @@ function fromOtherServer_NewConnection(obj){
 	console.log("Received new connection message from other server. That server's IP is "+
 		obj.ip+" and its port is "+obj.port);
 	
-	//now that it connected to me, I will connect to everything it is connected to
-	//except myself
-	connectAsClientToServer(obj.ip, obj.port); // first connect to server that just connected to me
-												// it wont be in the list it sent me
 	// connect to everything it is connected to (including myself - TOB algorithm calls for broadcasts that include self)
 	obj.allServerConnections.forEach( function(c) {
 		connectAsClientToServer(c.ip, c.port);
