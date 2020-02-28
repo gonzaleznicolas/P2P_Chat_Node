@@ -24,18 +24,19 @@ function initialize (IO_SERVER, IO_CLIENT, portImRunningOn){
 
 	myIP = getIPAddressOfThisMachine();
 	console.log("myIP: " + myIP);
-
 	myPort = portImRunningOn;
+	console.log("myPort: " + myPort);
+
 	ioServer = IO_SERVER;
-
 	ioServer.on('connection', ioServerOnConnection);
-
 	ioClient = IO_CLIENT;
 
+	// initialize TOB time stamp, and connect to self
 	myTS.time = 0;
 	myTS.machineIdentifier = machineIdentifier(myIP, myPort);
 	connectToSelf();
 
+	// start checking for TOB updates regularly
 	setInterval( tobApplyUpdates, 6000);
 }
 
@@ -45,15 +46,11 @@ function ioServerOnConnection(socketToClient){
 	socketToClient.on('disconnect', fromEither_Disconnect);
 
 	socketToClient.on('FromBrowser_ImYourBrowser', fromBrowser_ImYourBrowser);
-	socketToClient.on('FromBrowser_ConnectToUser', fromBrowser_ConnectToUser);
-	socketToClient.on('FromBrowser_SendMessageTo', fromBrowser_SendMessageTo);
-	socketToClient.on('FromBrowser_BroadcastMessage', fromBrowser_BroadcastMessage);
-	socketToClient.on('FromBrowser_Message', fromBrowser_Message);
-	socketToClient.on('FromBrowser_GiveUpdate', fromBrowser_GiveUpdate);
+	socketToClient.on('FromBrowser_ConnectToServer', fromBrowser_ConnectToServer);
+	socketToClient.on('FromBrowser_GiveTobUpdate', fromBrowser_GiveTobUpdate);
 
-	socketToClient.on('FromOtherServer_NewConnection', fromOtherServer_NewConnection);
-	socketToClient.on('FromOtherServer_Message', fromOtherServer_Message);
-	socketToClient.on('FromOtherServer_TOB_Message', fromOtherServer_TOB_Message)
+	socketToClient.on('FromOtherServer_iJustConnectedToYou', fromOtherServer_iJustConnectedToYou);
+	socketToClient.on('FromOtherServer_TobMessageOrAck', fromOtherServer_TobMessageOrAck)
 }
 
 function fromEither_Disconnect(){
@@ -67,42 +64,14 @@ FROM BROWSER EVENT HANDLERS
 function fromBrowser_ImYourBrowser(username){
 	myUsername = username;
 	socketToBrowser = this; // save the socket to the browser so I can send messages at any time
+	console.log("Browser has connected. Username selected is ", myUsername)
 }
 
-function fromBrowser_ConnectToUser(obj){
+function fromBrowser_ConnectToServer(obj){
 	connectAsClientToServer(obj.ip, obj.port);
 }
 
-function fromBrowser_Message(msg){
-	socketToBrowser = this; // save the socket to the browser so I can send messages at any time
-	console.log('MessageFromBrowser: ' + msg);
-	socketToBrowser.emit("FromServerToBrowser_Message", "this is me the server responding. Hey!");
-}
-
-function fromBrowser_SendMessageTo(obj /* {toIp, toPort, msg} */){
-	let serverToSendMessageTo = serversImConnectedTo.get(machineIdentifier(obj.toIp, obj.toPort));
-	if(serverToSendMessageTo == undefined){
-		console.log("Not connected to that server.");
-		return;
-	}
-	serverToSendMessageTo.socket.emit('FromOtherServer_Message', {
-		fromIp: myIP,
-		fromPort: myPort,
-		msg: obj.msg
-	});
-}
-
-function fromBrowser_BroadcastMessage(message){
-	serversImConnectedTo.forEach(function (server){
-		server.socket.emit('FromOtherServer_Message', {
-			fromIp: myIP,
-			fromPort: myPort,
-			msg: message
-		});
-	});
-}
-
-function fromBrowser_GiveUpdate(update){
+function fromBrowser_GiveTobUpdate(update){
 	tobSendUpdate(update);
 }
 
@@ -110,9 +79,8 @@ function fromBrowser_GiveUpdate(update){
 FROM OTHER SERVER EVENT HANDLERS
 ********************************************************/ 
 
-function fromOtherServer_NewConnection(obj){
-	console.log("Received new connection message from other server. That server's IP is "+
-		obj.ip+" and its port is "+obj.port);
+function fromOtherServer_iJustConnectedToYou(obj){
+	console.log("Server ", machineIdentifier(obj.ip, obj.port), " just connected to me.");
 	
 	// connect to everything it is connected to (including myself - TOB algorithm calls for broadcasts that include self)
 	obj.allServerConnections.forEach( function(c) {
@@ -120,13 +88,8 @@ function fromOtherServer_NewConnection(obj){
 	});
 }
 
-function fromOtherServer_Message(obj){
-	console.log("Message from server "+ machineIdentifier(obj.fromIp, obj.fromPort));
-	console.log(obj.msg)
-}
-
-function fromOtherServer_TOB_Message(obj){
-	tobReceiveMessage(obj);
+function fromOtherServer_TobMessageOrAck(obj){
+	tobReceiveMessageOrAck(obj);
 }
 
 /********************************************************
@@ -137,8 +100,7 @@ function connectAsClientToServer(ipToConnectTo, portToConnectTo){
 	if (serversImConnectedTo.has(machineIdentifier(ipToConnectTo, portToConnectTo)))
 		return;
 
-	console.log("Going to try to connect to server running at ip " + 
-		ipToConnectTo + " on port: "+portToConnectTo);
+	console.log("Going to try to connect to server ", machineIdentifier(ipToConnectTo, portToConnectTo));
 
 	let socketToServer = ioClient.connect(
 		"http://" + ipToConnectTo + ":" + portToConnectTo +"/",
@@ -154,8 +116,7 @@ function connectAsClientToServer(ipToConnectTo, portToConnectTo){
 			TS: {time: 0, machineIdentifier: machineIdentifier(ipToConnectTo, portToConnectTo)}
 		});
 		printListOfServersImConnectedTo();
-		console.log("Let "+machineIdentifier(ipToConnectTo, portToConnectTo)+" know I connected to it so it can connect to me...")
-		socketToServer.emit("FromOtherServer_NewConnection", {
+		socketToServer.emit("FromOtherServer_iJustConnectedToYou", {
 			ip: myIP,
 			port: myPort,
 			allServerConnections: compileArrayOfServersImConnectedTo()
@@ -199,21 +160,21 @@ function tobSendUpdate(u){
 	myTS.time = myTS.time+1;
 	
 	serversImConnectedTo.forEach(function (server){
-		server.socket.emit('FromOtherServer_TOB_Message', {
+		server.socket.emit('FromOtherServer_TobMessageOrAck', {
 			fromIp: myIP,
 			fromPort: myPort,
-			type: "message", // "message or ack"
+			messageOrAck: "message", // "message or ack"
 			message: u,
 			TS: myTS
 		});
 	});
 }
 
-function tobReceiveMessage(obj){
+function tobReceiveMessageOrAck(obj){
 	let from = serversImConnectedTo.get(machineIdentifier(obj.fromIp, obj.fromPort));
 	from.TS.time = obj.TS.time;
 
-	let isMessage = (obj.type == "message");
+	let isMessage = (obj.messageOrAck == "message");
 
 	if (isMessage)
 		Q.enqueue(obj);
@@ -223,10 +184,10 @@ function tobReceiveMessage(obj){
 
 		serversImConnectedTo.forEach(function (server){
 			if( !(server.ip == myIP && server.port == myPort) ){
-				server.socket.emit('FromOtherServer_TOB_Message', {
+				server.socket.emit('FromOtherServer_TobMessageOrAck', {
 					fromIp: myIP,
 					fromPort: myPort,
-					type: "ack", // "message or ack"
+					messageOrAck: "ack", // "message or ack"
 					TS: myTS
 				});
 			}
