@@ -1,7 +1,6 @@
 'use strict';
 
 const networkInterfaces = require('os').networkInterfaces()["Wi-Fi"];
-const publicIp = require('public-ip');
 const PriorityQueue = require('./priorityQueue.js');
 
 module.exports = {
@@ -32,16 +31,6 @@ function initialize (IO_SERVER, IO_CLIENT, portImRunningOn){
 	if(q !== undefined)
 		myIP = q.address;
 	console.log("myIP: " + myIP);
-
-	// if each computer on public
-	/*
-	(async () => {
-		myIP = await publicIp.v4();
-		console.log("my ip is:"+myIP)
-	 
-		//console.log(await publicIp.v6());
-	})();
-	*/
 
 	myPort = portImRunningOn;
 	ioServer = IO_SERVER;
@@ -258,7 +247,7 @@ function tobReceiveMessage(obj){
 
 // executes every second
 function tobApplyUpdates(){
-	Q.print();
+	//Q.print();
 
 	let update = Q.head();
 	if (update == -1){
