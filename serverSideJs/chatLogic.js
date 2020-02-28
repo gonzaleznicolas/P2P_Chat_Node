@@ -101,6 +101,15 @@ FROM OTHER SERVER EVENT HANDLERS
 function fromOtherServer_iJustConnectedToYou(obj){
 	console.log(new Date().getTime(), "Server ", serverIdentifier(obj.ip, obj.port), " just connected to me.");
 	
+	// if im already connected to the server that just connected to me
+	let serverThatJustConnectedToMe = serversImConnectedTo.get(serverIdentifier(obj.ip, obj.port))
+	if (serverThatJustConnectedToMe != undefined){
+		// update my record of its time stamp
+		console.log(new Date().getTime(), "Updating TS=", obj.TS.time, " for ", serverIdentifier(obj.ip, obj.port));
+		serverThatJustConnectedToMe.TS.time = obj.TS.time;
+		serverThatJustConnectedToMe.TS.serverIdentifier = obj.TS.serverIdentifier;
+	}
+
 	// connect to everything it is connected to (including myself - TOB algorithm calls for broadcasts that include self)
 	obj.allServerConnections.forEach( function(c) {
 		connectAsClientToServer(c.ip, c.port);
@@ -143,12 +152,13 @@ function connectAsClientToServer(ipToConnectTo, portToConnectTo){
 		socketToServer.emit("FromOtherServer_iJustConnectedToYou", {
 			ip: myIP,
 			port: myPort,
+			TS: myTS,
 			allServerConnections: compileArrayOfServersImConnectedTo()
 		})
 	});
 
 	socketToServer.on('disconnect', function(){
-		console.log("The server I was connected to disconnected");
+		console.log(new Date().getTime(), "The server I was connected to disconnected");
 	})
 }
 
