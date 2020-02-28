@@ -1,9 +1,10 @@
 {
-  "name": "socket-chat-example",
+  "name": "p2p-chat-app",
   "version": "0.0.1",
   "description": "my first socket.io app",
   "dependencies": {
     "express": "^4.17.1",
     "socket.io": "^2.3.0"
-  }
+  },
+  "license": "ISC"
 }
