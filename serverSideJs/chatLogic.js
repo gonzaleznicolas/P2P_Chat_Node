@@ -16,7 +16,7 @@ let myIP; // string
 let myUsername;
 
 let serversImConnectedTo = new Map();
-let myTS = {time: 0, machineIdentifier: ""}
+let myTS = {time: 0, serverIdentifier: ""}
 let Q = new PriorityQueue();
 
 
@@ -33,7 +33,7 @@ function initialize (IO_SERVER, IO_CLIENT, portImRunningOn){
 
 	// initialize TOB time stamp, and connect to self
 	myTS.time = 0;
-	myTS.machineIdentifier = machineIdentifier(myIP, myPort);
+	myTS.serverIdentifier = serverIdentifier(myIP, myPort);
 	connectToSelf();
 
 	// start checking for TOB updates regularly
@@ -80,7 +80,7 @@ FROM OTHER SERVER EVENT HANDLERS
 ********************************************************/ 
 
 function fromOtherServer_iJustConnectedToYou(obj){
-	console.log("Server ", machineIdentifier(obj.ip, obj.port), " just connected to me.");
+	console.log("Server ", serverIdentifier(obj.ip, obj.port), " just connected to me.");
 	
 	// connect to everything it is connected to (including myself - TOB algorithm calls for broadcasts that include self)
 	obj.allServerConnections.forEach( function(c) {
@@ -97,10 +97,10 @@ CONNECTION FUNCTIONS
 ********************************************************/ 
 
 function connectAsClientToServer(ipToConnectTo, portToConnectTo){
-	if (serversImConnectedTo.has(machineIdentifier(ipToConnectTo, portToConnectTo)))
+	if (serversImConnectedTo.has(serverIdentifier(ipToConnectTo, portToConnectTo)))
 		return;
 
-	console.log("Going to try to connect to server ", machineIdentifier(ipToConnectTo, portToConnectTo));
+	console.log("Going to try to connect to server ", serverIdentifier(ipToConnectTo, portToConnectTo));
 
 	let socketToServer = ioClient.connect(
 		"http://" + ipToConnectTo + ":" + portToConnectTo +"/",
@@ -108,12 +108,12 @@ function connectAsClientToServer(ipToConnectTo, portToConnectTo){
 	);
 
 	socketToServer.on('connect', function(){
-		console.log("I successfully connected to server "+machineIdentifier(ipToConnectTo, portToConnectTo));
-		serversImConnectedTo.set(machineIdentifier(ipToConnectTo, portToConnectTo), {
+		console.log("I successfully connected to server "+serverIdentifier(ipToConnectTo, portToConnectTo));
+		serversImConnectedTo.set(serverIdentifier(ipToConnectTo, portToConnectTo), {
 			ip: ipToConnectTo,
 			port: portToConnectTo,
 			socket: socketToServer,
-			TS: {time: 0, machineIdentifier: machineIdentifier(ipToConnectTo, portToConnectTo)}
+			TS: {time: 0, serverIdentifier: serverIdentifier(ipToConnectTo, portToConnectTo)}
 		});
 		printListOfServersImConnectedTo();
 		socketToServer.emit("FromOtherServer_iJustConnectedToYou", {
@@ -129,7 +129,7 @@ function connectAsClientToServer(ipToConnectTo, portToConnectTo){
 }
 
 function connectToSelf(){
-	if (serversImConnectedTo.has(machineIdentifier(myIP, myPort)))
+	if (serversImConnectedTo.has(serverIdentifier(myIP, myPort)))
 		return;
 
 	let socketToSelf = ioClient.connect(
@@ -139,7 +139,7 @@ function connectToSelf(){
 
 	socketToSelf.on('connect', function(){
 		console.log("I successfully connected to myself.");
-		serversImConnectedTo.set(machineIdentifier(myIP, myPort), {
+		serversImConnectedTo.set(serverIdentifier(myIP, myPort), {
 			ip: myIP,
 			port: myPort,
 			socket: socketToSelf,
@@ -171,7 +171,7 @@ function tobSendUpdate(u){
 }
 
 function tobReceiveMessageOrAck(obj){
-	let from = serversImConnectedTo.get(machineIdentifier(obj.fromIp, obj.fromPort));
+	let from = serversImConnectedTo.get(serverIdentifier(obj.fromIp, obj.fromPort));
 	from.TS.time = obj.TS.time;
 
 	let isMessage = (obj.messageOrAck == "message");
@@ -207,7 +207,7 @@ function tobApplyUpdates(){
 
 	let uts = update.TS
 
-	console.log("myTS time: "+ myTS.time+" myTS mi: "+ myTS.machineIdentifier);
+	console.log("myTS time: "+ myTS.time+" myTS mi: "+ myTS.serverIdentifier);
 
 	// see if uts <= the TS of all servers im connected to
 	let utsIsSmallest = true;
@@ -253,7 +253,7 @@ function compileArrayOfServersImConnectedTo(){
 	return array;
 }
 
-function machineIdentifier(ip, port){
+function serverIdentifier(ip, port){
 	return ""+ip+":"+port;
 }
 
@@ -261,9 +261,9 @@ function compareTimeStamps(a, b){
 	if(a.time != b.time)
 		return a.time - b.time;
 	else{
-		if (a.machineIdentifier < b.machineIdentifier)
+		if (a.serverIdentifier < b.serverIdentifier)
 			return -1;
-		else if (a.machineIdentifier > b.machineIdentifier)
+		else if (a.serverIdentifier > b.serverIdentifier)
 			return 1;
 		else
 			return 0;
@@ -271,7 +271,7 @@ function compareTimeStamps(a, b){
 }
 
 function tsCopy(ts){
-	return {time: ts.time, machineIdentifier: ts.machineIdentifier};
+	return {time: ts.time, serverIdentifier: ts.serverIdentifier};
 }
 
 function getIPAddressOfThisMachine(){
