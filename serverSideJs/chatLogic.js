@@ -168,7 +168,7 @@ function connectToSelf(){
 
 	let socketToSelf = ioClient.connect(
 		"http://" + myIP + ":" + myPort +"/",
-		{reconnection: true}
+		{reconnection: false}
 	);
 
 	socketToSelf.on('connect', function(){
@@ -248,7 +248,7 @@ function tobApplyUpdates(){
 	let itr = serversImConnectedTo.values();
 	let result = itr.next();
 	while (!result.done) {
-		console.log(new Date().getTime(), "Process "+result.value.port+" has time "+result.value.TS.time);
+		console.log(new Date().getTime(), "Process "+ serverIdentifier(result.value.ip, result.value.port)+" has time "+result.value.TS.time);
 		if ( uts.time > result.value.TS.time )
 			utsIsSmallest = false;
 		result = itr.next();
