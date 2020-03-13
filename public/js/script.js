@@ -1,7 +1,7 @@
 let socket;
 
 $(function () {
-	socket = io();
+	socket = io({reconnection: false});
 
 	socket.emit('FromBrowser_ImYourBrowser', "some username");
 
