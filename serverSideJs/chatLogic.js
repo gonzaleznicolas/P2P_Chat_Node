@@ -37,7 +37,7 @@ function initialize (IO_SERVER, IO_CLIENT, portImRunningOn){
 	connectToSelf();
 
 	// start checking for TOB updates regularly
-	setInterval( tobApplyUpdates, 6000);
+	setInterval( tobApplyUpdates, 500);
 }
 
 function ioServerOnConnection(socketToClient){
@@ -56,7 +56,7 @@ function ioServerOnConnection(socketToClient){
 }
 
 function fromEither_Disconnect(){
-	console.log(new Date().getTime(), 'Someone disconnected');
+	console.log(new Date().getTime(), 'Someone who was connected to me disconnected.');
 }
 
 /********************************************************
@@ -137,8 +137,11 @@ function connectAsClientToServer(ipToConnectTo, portToConnectTo){
 
 	let socketToServer = ioClient.connect(
 		"http://" + ipToConnectTo + ":" + portToConnectTo +"/",
-		{reconnection: true}
+		{reconnection: false}
 	);
+
+	// need this so that when it disconnects, I know how to remove from my map
+	socketToServer.meshChatIdentifier = serverIdentifier(ipToConnectTo, portToConnectTo);
 
 	socketToServer.on('connect', function(){
 		console.log(new Date().getTime(), "I successfully connected to server "+serverIdentifier(ipToConnectTo, portToConnectTo));
@@ -158,7 +161,10 @@ function connectAsClientToServer(ipToConnectTo, portToConnectTo){
 	});
 
 	socketToServer.on('disconnect', function(){
-		console.log(new Date().getTime(), "The server I was connected to disconnected");
+		console.log(new Date().getTime(), "Server ", this.meshChatIdentifier, " disconnected. Remove it from my map.");
+		let deleted = serversImConnectedTo.delete(this.meshChatIdentifier);
+		console.log(new Date().getTime(), "Successfully deleted? ", deleted);
+		printListOfServersImConnectedTo();
 	})
 }
 
@@ -241,7 +247,7 @@ function tobApplyUpdates(){
 
 	let uts = update.TS
 
-	console.log(new Date().getTime(), "myTS time: "+ myTS.time+" myTS mi: "+ myTS.serverIdentifier);
+	console.log(new Date().getTime(), "myTS time: "+ myTS.time+" myTS serverIdentifier: "+ myTS.serverIdentifier);
 
 	// see if uts <= the TS of all servers im connected to
 	let utsIsSmallest = true;
