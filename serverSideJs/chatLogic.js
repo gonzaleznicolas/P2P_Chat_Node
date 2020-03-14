@@ -82,6 +82,8 @@ function fromBrowser_ConnectToRoom(obj){
 		obj.ip = myIP;
 		obj.port = myPort;
 	}
+
+	connectToCentralizedServer();
 	
 	console.log(new Date().getTime(), "My browser has asked me to connect to ", serverIdentifier(obj.ip, obj.port));
 	connectAsClientToServer(obj.ip, obj.port);
@@ -348,6 +350,29 @@ function getIPAddressOfThisMachine(){
 	return ip;
 }
 
+function connectToCentralizedServer(){
+	/*
+		example from elsewhere in the code of how to connect as a client to a remote server:
+
+		see function connectAsClientToServer()
+
+	let socketToCentralizedServer = ioClient.connect(
+		"http://" + ipToConnectTo + ":" + portToConnectTo +"/",
+		{reconnection: false}
+	);
+
+	socketToCentralizedServer.on('connect', function() {
+
+	});
+
+	socketToCentralizedServer.on('disconnect', function() {
+
+	});
+
+	*/
+}
+
 function sendHeartbeatToServer(){
-	
+	// send a heartbeat with username, myIP, myPort, and roomName
+	// (all of those are global variables accessible from this function)
 }
