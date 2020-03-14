@@ -14,6 +14,8 @@ let socketToBrowser;
 
 let myPort;
 let myIP; // string
+let username;
+let roomName;
 
 let chatLog = [];
 let serversImConnectedTo = new Map();
@@ -47,7 +49,7 @@ function ioServerOnConnection(socketToClient){
 	socketToClient.on('disconnect', fromEither_Disconnect);
 
 	socketToClient.on('FromBrowser_ImYourBrowser', fromBrowser_ImYourBrowser);
-	socketToClient.on('FromBrowser_ConnectToServer', fromBrowser_ConnectToServer);
+	socketToClient.on('FromBrowser_ConnectToRoom', fromBrowser_ConnectToRoom);
 	socketToClient.on('FromBrowser_GiveTobUpdate', fromBrowser_GiveTobUpdate);
 	socketToClient.on('FromBrowser_SendMessageToSpecificServer', fromBrowser_SendMessageToSpecificServer);
 
@@ -69,7 +71,15 @@ function fromBrowser_ImYourBrowser(){
 	console.log(new Date().getTime(), "Browser has connected.")
 }
 
-function fromBrowser_ConnectToServer(obj){
+function fromBrowser_ConnectToRoom(obj){
+	username = obj.username;
+	roomName = obj.roomName;
+	if (obj.ip == undefined){
+		console.log("HI");
+		obj.ip = myIP;
+		obj.port = myPort;
+	}
+	
 	console.log(new Date().getTime(), "My browser has asked me to connect to ", serverIdentifier(obj.ip, obj.port));
 	connectAsClientToServer(obj.ip, obj.port);
 }
@@ -206,6 +216,7 @@ function tobSendUpdate(u){
 		server.socket.emit('FromOtherServer_TobMessageOrAck', {
 			fromIp: myIP,
 			fromPort: myPort,
+			fromUser: username,
 			messageOrAck: "message", // "message or ack"
 			message: u,
 			TS: myTS
@@ -230,6 +241,7 @@ function tobReceiveMessageOrAck(obj){
 				server.socket.emit('FromOtherServer_TobMessageOrAck', {
 					fromIp: myIP,
 					fromPort: myPort,
+					fromUser: username,
 					messageOrAck: "ack", // "message or ack"
 					TS: myTS
 				});
