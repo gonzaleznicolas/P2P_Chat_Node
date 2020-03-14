@@ -11,7 +11,7 @@ $(function () {
 });
 
 // the first thing the user should see when they "open the application"
-// (run node index.js 3000 and connect to localhost:3000 on their browser)
+// (run node index.js <port> and connect to localhost:<port> on their browser)
 // is a prompt to enter:
 // 1. username
 // 2. name of room you want to enter (if room does not already exist, you are creating a new room)
