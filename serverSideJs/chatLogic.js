@@ -14,7 +14,6 @@ let socketToBrowser;
 
 let myPort;
 let myIP; // string
-let myUsername;
 
 let chatLog = [];
 let serversImConnectedTo = new Map();
@@ -65,10 +64,9 @@ function fromEither_Disconnect(){
 FROM BROWSER EVENT HANDLERS
 ********************************************************/ 
 
-function fromBrowser_ImYourBrowser(username){
-	myUsername = username;
+function fromBrowser_ImYourBrowser(){
 	socketToBrowser = this; // save the socket to the browser so I can send messages at any time
-	console.log(new Date().getTime(), "Browser has connected. Username selected is ", myUsername)
+	console.log(new Date().getTime(), "Browser has connected.")
 }
 
 function fromBrowser_ConnectToServer(obj){
@@ -111,6 +109,7 @@ function fromOtherServer_iJustConnectedToYou(obj){
 		serverThatJustConnectedToMe.TS.time = obj.TS.time;
 		serverThatJustConnectedToMe.TS.serverIdentifier = obj.TS.serverIdentifier;
 		chatLog = lodash.cloneDeep(obj.chatLog);
+		socketToBrowser.emit('FromServer_ChatLog', chatLog);
 	}
 
 	// connect to everything it is connected to (including myself - TOB algorithm calls for broadcasts that include self)
@@ -269,6 +268,7 @@ function tobApplyUpdates(){
 		console.log(new Date().getTime(), "APPLYING UPDATE:");
 		console.log(new Date().getTime(), update);
 		chatLog.push(update);
+		socketToBrowser.emit('FromServer_OrderedUpdate', update);
 	}
 
 }
