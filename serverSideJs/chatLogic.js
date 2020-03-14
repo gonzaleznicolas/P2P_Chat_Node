@@ -1,6 +1,7 @@
 'use strict';
 
 const ifaces = require('os').networkInterfaces();
+const lodash = require('lodash')
 const PriorityQueue = require('./priorityQueue.js');
 
 module.exports = {
@@ -15,6 +16,7 @@ let myPort;
 let myIP; // string
 let myUsername;
 
+let chatLog = [];
 let serversImConnectedTo = new Map();
 let myTS = {time: 0, serverIdentifier: ""}
 let Q = new PriorityQueue();
@@ -108,6 +110,7 @@ function fromOtherServer_iJustConnectedToYou(obj){
 		console.log(new Date().getTime(), "Updating TS=", obj.TS.time, " for ", serverIdentifier(obj.ip, obj.port));
 		serverThatJustConnectedToMe.TS.time = obj.TS.time;
 		serverThatJustConnectedToMe.TS.serverIdentifier = obj.TS.serverIdentifier;
+		chatLog = lodash.cloneDeep(obj.chatLog);
 	}
 
 	// connect to everything it is connected to (including myself - TOB algorithm calls for broadcasts that include self)
@@ -156,7 +159,8 @@ function connectAsClientToServer(ipToConnectTo, portToConnectTo){
 			ip: myIP,
 			port: myPort,
 			TS: myTS,
-			allServerConnections: compileArrayOfServersImConnectedTo()
+			allServerConnections: compileArrayOfServersImConnectedTo(),
+			chatLog: chatLog
 		})
 	});
 
@@ -264,6 +268,7 @@ function tobApplyUpdates(){
 		Q.dequeue();
 		console.log(new Date().getTime(), "APPLYING UPDATE:");
 		console.log(new Date().getTime(), update);
+		chatLog.push(update);
 	}
 
 }
