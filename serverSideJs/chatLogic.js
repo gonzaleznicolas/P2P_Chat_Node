@@ -41,6 +41,9 @@ function initialize (IO_SERVER, IO_CLIENT, portImRunningOn){
 
 	// start checking for TOB updates regularly
 	setInterval( tobApplyUpdates, 500);
+
+	// start sending heartbeats to the server
+	setInterval( sendHeartbeatToServer, 2000);
 }
 
 function ioServerOnConnection(socketToClient){
@@ -343,4 +346,8 @@ function getIPAddressOfThisMachine(){
 		});
 	});
 	return ip;
+}
+
+function sendHeartbeatToServer(){
+	
 }
