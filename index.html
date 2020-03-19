@@ -1,19 +1,60 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>P2P Chat</title>
-    <link rel="stylesheet" type="text/css" href="css/style.css" />
-    <link rel="apple-touch-icon" sizes="180x180" href="includes/apple-touch-icon.png">
+
+    <!-- Favicon -->
     <link rel="icon" type="image/png" sizes="32x32" href="includes/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="includes/favicon-16x16.png">
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+    <!-- Our CSS -->
+    <link rel="stylesheet" type="text/css" href="css/style.css" />
+
+    <link rel="apple-touch-icon" sizes="180x180" href="includes/apple-touch-icon.png">
     <link rel="manifest" href="includes/site.webmanifest">
+
     <meta name="msapplication-TileColor" content="#da532c">
     <meta name="theme-color" content="#ffffff">
+
   </head>
-  <script src="/socket.io/socket.io.js"></script>
+
   <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
-  <script src="js/script.js" defer"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="js/script.js" defer></script>
+
   <body>
 
+    <div class="container-fluid justify-content-center">
+
+      <!-- //********** Message Display ********** -->
+      <div class="row justify-content-center">
+        <div class="col">
+          <ul id="messages" class="d-flex flex-column-reverse overflow-auto"></ul>
+        </div>
+      </div>
+
+      <!-- //********** Input ********** -->
+      <div class="row justify-content-center">
+        <form action="">
+          <div class="form-row align-items-center">
+
+            <div class="col">
+              <input type="text" class="form-control mb-2" id="input" autocomplete="off" placeholder="Send a Message..."/>
+            </div>
+
+            <div class="col-auto">
+              <button type="submit" class="btn btn-primary mb-2">Send</button>
+            </div>
+
+          </div>
+        </form>
+      </div>
+
+    </div>
   </body>
 </html>
