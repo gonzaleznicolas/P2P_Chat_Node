@@ -377,16 +377,9 @@ function sendHeartbeatToServer(){
 	// send a heartbeat with username, myIP, myPort, and roomName
 	// (all of those are global variables accessible from this function)
 
-	const options = {
-		host: 'localhost',
-		path: '/heartbeat',
-		port: '4000',
-		method: 'POST',
-	};
-
 	// TODO: Change hardcoded values
 	request.post(
-		'http://localhost:4000/heartbeat',
+		'https://central-server-b819d.appspot.com/heartbeat',
 		{ json: {
 				userId: 'TODO',
 				chatId: 'aCh2iBdMOpu6y3Bh1dEL',
