@@ -5,6 +5,7 @@
   "dependencies": {
     "express": "^4.17.1",
     "lodash": "^4.17.15",
+    "request": "^2.88.2",
     "socket.io": "^2.3.0"
   },
   "license": "ISC"
