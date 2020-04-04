@@ -1,9 +1,11 @@
 'use strict';
 
+const request = require('request');
 const ifaces = require('os').networkInterfaces();
 const lodash = require('lodash')
 const PriorityQueue = require('./priorityQueue.js');
 const short_uuid = require('short-uuid');
+const supernodeEndPoint = "https://central-server-b819d.appspot.com" 
 
 module.exports = {
 	initialize: initialize
@@ -16,17 +18,21 @@ let socketToBrowser;
 let myPort;
 let myIP; // string
 let myIdentifier;
-let username;
-let roomName;
+let userName;
 
 let chatLog = [];
+let chatRooms = [];
+let joinedRooms = [];
+let chatMembers = {};
+let chatLogs = {};
 let serversImConnectedTo = new Map();
-let myTS = {time: 0, serverIdentifier: ""}
+let myTS = {time: 0, serverIdentifier: "", userName: ''}
 let Q = new PriorityQueue();
 
 function initialize (IO_SERVER, IO_CLIENT, portImRunningOn){
 
-	myIdentifier = "node"+portImRunningOn; // short_uuid().new();
+	myIdentifier = short_uuid().new();
+	userName = short_uuid().new();
 
 	myIP = getIPAddressOfThisMachine();
 	console.log(new Date().getTime(), "myIP: " + myIP);
@@ -40,6 +46,7 @@ function initialize (IO_SERVER, IO_CLIENT, portImRunningOn){
 	// initialize TOB time stamp, and connect to self
 	myTS.time = 0;
 	myTS.serverIdentifier = myIdentifier;
+	myTS.userName = userName;
 	connectToSelf();
 
 	// start checking for TOB updates regularly
@@ -47,6 +54,17 @@ function initialize (IO_SERVER, IO_CLIENT, portImRunningOn){
 
 	// start sending heartbeats to the server
 	setInterval( sendHeartbeatToServer, 2000);
+
+	// get chatrooms from the server
+	let options = {
+		url: supernodeEndPoint + "/chatrooms",
+		method: 'GET',
+	};
+
+	request(options, function(err, res, body) {
+		chatRooms = (JSON.parse(body)).rooms;
+		console.log("Available Rooms:\n", chatRooms);
+	});
 }
 
 function ioServerOnConnection(socketToClient){
@@ -75,15 +93,41 @@ FROM BROWSER EVENT HANDLERS
 function fromBrowser_ImYourBrowser(){
 	socketToBrowser = this; // save the socket to the browser so I can send messages at any time
 	console.log(new Date().getTime(), "Browser has connected.")
+	socketToBrowser.emit('FromServer_AvailableRooms', chatRooms);
 }
 
 function fromBrowser_ConnectToRoom(obj){
-	username = obj.username;
-	roomName = obj.roomName;
+	let chatID = obj.chatID;
 
-	if (obj.ip != undefined && obj.port != undefined && obj.identifier != undefined){
-		console.log(new Date().getTime(), "My browser has asked me to connect to ", obj.identifier);
-		connectAsClientToServer(obj.ip, obj.port, obj.identifier);
+	// contact the supernode to get info about the chatroom
+	let data = {
+		chatId: chatID,
+		userId: myTS.serverIdentifier,
+		ip: myIP,
+		port: myPort
+	};
+
+	let options = {
+		url: supernodeEndPoint + "/chatrooms",
+		method: 'POST',
+		json: data
+	};
+
+	request(options, function(err, res, obj) {
+		chatMembers[chatID] = obj.members;
+		chatLogs[chatID] = obj.log;
+	});
+	
+	if (Array.isArray(chatMembers[chatID]) && chatMembers[chatID].length) {
+		// connectAsClientToServer(chatMembers[chatID][0].ip, chatMembers[chatID][0].port, myTS.serverIdentifier);
+		console.log(`Try connecting to ${chatMembers[chatID][0].ip}:${chatMembers[chatID][0].port}......`);
+		// TO-DO 
+		// fallback to other member of the room, if the first member is not responsive
+		joinedRooms.push(chatID)
+	} else {
+		// No action if the chat room is empty
+		joinedRooms.push(chatID)
+		console.log(`Become the first member of room ${chatID}`)
 	}
 }
 
@@ -251,7 +295,7 @@ function tobReceiveMessageOrAck(obj){
 					fromIp: myIP,
 					fromPort: myPort,
 					fromIdentifier: myIdentifier,
-					fromUser: username,
+					// fromUser: username,
 					messageOrAck: "ack", // "message or ack"
 					TS: myTS
 				});
@@ -348,6 +392,22 @@ function getIPAddressOfThisMachine(){
 }
 
 function sendHeartbeatToServer(){
-	// send a heartbeat with username, myIP, myPort, and roomName
-	// (all of those are global variables accessible from this function)
+	joinedRooms.forEach((room) => {
+		let data = {
+			userId: myTS.serverIdentifier,
+			chatId: room,
+			ip: myIP,
+			port: myPort
+		};
+	
+		let options = {
+			url: supernodeEndPoint + "/chatrooms",
+			method: 'POST',
+			json: data
+		};
+	
+		request(options, function(err, res, obj) {
+			console.log(obj);
+		});
+	});
 }

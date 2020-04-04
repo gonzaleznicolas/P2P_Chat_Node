@@ -5,14 +5,19 @@ $(function () {
 
 	socket.on('FromServer_OrderedUpdate', fromServer_OrderedUpdate);
 	socket.on('FromServer_ChatLog', fromServer_ChatLog);
+	socket.on('FromServer_AvailableRooms', fromServer_AvailableRooms);
 
 	socket.emit('FromBrowser_ImYourBrowser');
 
 });
 
 
-function connectToRoom(username, roomName, ip, port, identifier){
-	socket.emit('FromBrowser_ConnectToRoom', {username: username, roomName: roomName, ip: ip, port: port, identifier: identifier});
+// function connectToRoom(username, roomName, ip, port, identifier){
+// 	socket.emit('FromBrowser_ConnectToRoom', {username: username, roomName: roomName, ip: ip, port: port, identifier: identifier});
+// }
+
+function connectToRoom(chatID){
+	socket.emit('FromBrowser_ConnectToRoom', {chatID: chatID});
 }
 
 // when the user sends a message, call this function
@@ -38,4 +43,9 @@ function fromServer_OrderedUpdate(update){
 function fromServer_ChatLog(chatLog){
 	console.log("The whole chat history:");
 	console.log(chatLog);
+}
+
+function fromServer_AvailableRooms(chatRooms){
+	console.log("Available chat rooms:");
+	console.log(chatRooms);
 }
