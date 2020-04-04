@@ -81,16 +81,11 @@ function fromBrowser_ImYourBrowser(){
 function fromBrowser_ConnectToRoom(obj){
 	username = obj.username;
 	roomName = obj.roomName;
-	if (obj.ip == undefined){
-		console.log("HI");
-		obj.ip = myIP;
-		obj.port = myPort;
-	}
 
-	connectToCentralizedServer();
-	
-	console.log(new Date().getTime(), "My browser has asked me to connect to ", serverIdentifier(obj.ip, obj.port));
-	connectAsClientToServer(obj.ip, obj.port);
+	if (obj.ip != undefined && obj.port != undefined && obj.identifier != undefined){
+		console.log(new Date().getTime(), "My browser has asked me to connect to ", serverIdentifier(obj.ip, obj.port));
+		connectAsClientToServer(obj.ip, obj.port);
+	}
 }
 
 function fromBrowser_GiveTobUpdate(update){
@@ -352,28 +347,6 @@ function getIPAddressOfThisMachine(){
 		});
 	});
 	return ip;
-}
-
-function connectToCentralizedServer(){
-	/*
-		example from elsewhere in the code of how to connect as a client to a remote server:
-
-		see function connectAsClientToServer()
-
-	let socketToCentralizedServer = ioClient.connect(
-		"http://" + ipToConnectTo + ":" + portToConnectTo +"/",
-		{reconnection: false}
-	);
-
-	socketToCentralizedServer.on('connect', function() {
-
-	});
-
-	socketToCentralizedServer.on('disconnect', function() {
-
-	});
-
-	*/
 }
 
 function sendHeartbeatToServer(){
