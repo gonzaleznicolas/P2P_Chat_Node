@@ -45,9 +45,6 @@ function initialize (IO_SERVER, IO_CLIENT, portImRunningOn){
 
 	// start checking for TOB updates regularly
 	setInterval( tobApplyUpdates, 500);
-
-	// start sending heartbeats to the server
-	setInterval( sendHeartbeatToServer, 2000);
 }
 
 function ioServerOnConnection(socketToClient){
@@ -81,6 +78,9 @@ function fromBrowser_ImYourBrowser(){
 function fromBrowser_ConnectToRoom(obj){
 	username = obj.username;
 	roomName = obj.roomName;
+
+	// start sending heartbeats to the server
+	setInterval( sendHeartbeatToServer, 2000);
 
 	if (obj.ip != undefined && obj.port != undefined && obj.identifier != undefined){
 		console.log(new Date().getTime(), "My browser has asked me to connect to ", obj.identifier);
@@ -363,7 +363,7 @@ function sendHeartbeatToServer(){
 			} },
 		function (error, response, body) {
 			if (!error && response.statusCode == 200) {
-				console.log(body);
+				//console.log(body);
 			}
 		}
 	);
