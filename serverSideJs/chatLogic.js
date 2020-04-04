@@ -4,6 +4,7 @@ const ifaces = require('os').networkInterfaces();
 const lodash = require('lodash')
 const PriorityQueue = require('./priorityQueue.js');
 const short_uuid = require('short-uuid');
+const request = require('request');
 
 module.exports = {
 	initialize: initialize
@@ -350,4 +351,20 @@ function getIPAddressOfThisMachine(){
 function sendHeartbeatToServer(){
 	// send a heartbeat with username, myIP, myPort, and roomName
 	// (all of those are global variables accessible from this function)
+
+	// TODO: Change hardcoded values
+	request.post(
+		'https://central-server-b819d.appspot.com/heartbeat',
+		{ json: {
+				userId: 'TODO',
+				chatId: 'aCh2iBdMOpu6y3Bh1dEL',
+				ip: myIP,
+				port: myPort
+			} },
+		function (error, response, body) {
+			if (!error && response.statusCode == 200) {
+				console.log(body);
+			}
+		}
+	);
 }
