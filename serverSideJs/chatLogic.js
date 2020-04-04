@@ -53,7 +53,7 @@ function initialize (IO_SERVER, IO_CLIENT, portImRunningOn){
 	setInterval( tobApplyUpdates, 500);
 
 	// start sending heartbeats to the server
-	setInterval( sendHeartbeatToServer, 2000);
+	setInterval( sendHeartbeatToServer, 30000);
 
 	// get chatrooms from the server
 	let options = {
@@ -401,7 +401,7 @@ function sendHeartbeatToServer(){
 		};
 	
 		let options = {
-			url: supernodeEndPoint + "/chatrooms",
+			url: supernodeEndPoint + "/heartbeat",
 			method: 'POST',
 			json: data
 		};
