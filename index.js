@@ -22,4 +22,4 @@ http.listen(port, function(){
 	console.log(new Date().getTime(), 'listening on *:' + port);
 });
 
-chatLogic.initialize(ioServer, ioClient, port)
+chatLogic.initialize(ioServer, ioClient, port);
