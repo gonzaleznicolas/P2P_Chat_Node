@@ -5,11 +5,7 @@ const ifaces = require('os').networkInterfaces();
 const lodash = require('lodash')
 const PriorityQueue = require('./priorityQueue.js');
 const short_uuid = require('short-uuid');
-<<<<<<< HEAD
 const supernodeEndPoint = "https://central-server-b819d.appspot.com" 
-=======
-const request = require('request');
->>>>>>> master
 
 module.exports = {
 	initialize: initialize
@@ -65,7 +61,7 @@ function initialize (IO_SERVER, IO_CLIENT, portImRunningOn){
 		method: 'GET',
 	};
 
-	request(options, function(err, res, body) {
+	request(options, (err, res, body) => {
 		chatRooms = (JSON.parse(body)).rooms;
 		console.log("Available Rooms:\n", chatRooms);
 	});
@@ -101,7 +97,6 @@ function fromBrowser_ImYourBrowser(){
 }
 
 function fromBrowser_ConnectToRoom(obj){
-<<<<<<< HEAD
 	let chatID = obj.chatID;
 
 	// contact the supernode to get info about the chatroom
@@ -118,33 +113,22 @@ function fromBrowser_ConnectToRoom(obj){
 		json: data
 	};
 
-	request(options, function(err, res, obj) {
+	request(options, (err, res, obj) => {
 		chatMembers[chatID] = obj.members;
+		// console.log("Current members:\n", chatMembers[chatID]);
 		chatLogs[chatID] = obj.log;
+		if (Array.isArray(chatMembers[chatID]) && chatMembers[chatID].length) {
+			console.log(`Try connecting to ${chatMembers[chatID][0].ip}:${chatMembers[chatID][0].port}......`);
+			connectAsClientToServer(chatMembers[chatID][0].ip, chatMembers[chatID][0].port);
+			// TO-DO 
+			// fallback to other member of the room, if the first member is not responsive
+			joinedRooms.push(chatID)
+		} else {
+			// No action if the chat room is empty
+			joinedRooms.push(chatID)
+			console.log(`Become the first member of room ${chatID}`)
+		}
 	});
-	
-	if (Array.isArray(chatMembers[chatID]) && chatMembers[chatID].length) {
-		// connectAsClientToServer(chatMembers[chatID][0].ip, chatMembers[chatID][0].port, myTS.serverIdentifier);
-		console.log(`Try connecting to ${chatMembers[chatID][0].ip}:${chatMembers[chatID][0].port}......`);
-		// TO-DO 
-		// fallback to other member of the room, if the first member is not responsive
-		joinedRooms.push(chatID)
-	} else {
-		// No action if the chat room is empty
-		joinedRooms.push(chatID)
-		console.log(`Become the first member of room ${chatID}`)
-=======
-	username = obj.username;
-	roomName = obj.roomName;
-
-	// start sending heartbeats to the server
-	setInterval( sendHeartbeatToServer, 2000);
-
-	if (obj.ip != undefined && obj.port != undefined && obj.identifier != undefined){
-		console.log(new Date().getTime(), "My browser has asked me to connect to ", obj.identifier);
-		connectAsClientToServer(obj.ip, obj.port, obj.identifier);
->>>>>>> master
-	}
 }
 
 function fromBrowser_GiveTobUpdate(update){
@@ -206,7 +190,8 @@ function fromOtherServer_MessageToSpecificServer(obj){
 CONNECTION FUNCTIONS
 ********************************************************/ 
 
-function connectAsClientToServer(ipToConnectTo, portToConnectTo, identifierToConnectTo){
+function connectAsClientToServer(ipToConnectTo, portToConnectTo){
+	let identifierToConnectTo = myTS.serverIdentifier;
 	if (serversImConnectedTo.has(identifierToConnectTo))
 		return;
 
@@ -408,7 +393,6 @@ function getIPAddressOfThisMachine(){
 }
 
 function sendHeartbeatToServer(){
-<<<<<<< HEAD
 	joinedRooms.forEach((room) => {
 		let data = {
 			userId: myTS.serverIdentifier,
@@ -423,28 +407,8 @@ function sendHeartbeatToServer(){
 			json: data
 		};
 	
-		request(options, function(err, res, obj) {
+		request(options, (err, res, obj) => {
 			console.log(obj);
 		});
 	});
-=======
-	// send a heartbeat with username, myIP, myPort, and roomName
-	// (all of those are global variables accessible from this function)
-
-	// TODO: Change hardcoded values
-	request.post(
-		'https://central-server-b819d.appspot.com/heartbeat',
-		{ json: {
-				userId: 'TODO',
-				chatId: 'aCh2iBdMOpu6y3Bh1dEL',
-				ip: myIP,
-				port: myPort
-			} },
-		function (error, response, body) {
-			if (!error && response.statusCode == 200) {
-				//console.log(body);
-			}
-		}
-	);
->>>>>>> master
 }
