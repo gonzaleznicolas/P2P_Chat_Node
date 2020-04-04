@@ -5,7 +5,11 @@ const ifaces = require('os').networkInterfaces();
 const lodash = require('lodash')
 const PriorityQueue = require('./priorityQueue.js');
 const short_uuid = require('short-uuid');
+<<<<<<< HEAD
 const supernodeEndPoint = "https://central-server-b819d.appspot.com" 
+=======
+const request = require('request');
+>>>>>>> master
 
 module.exports = {
 	initialize: initialize
@@ -97,6 +101,7 @@ function fromBrowser_ImYourBrowser(){
 }
 
 function fromBrowser_ConnectToRoom(obj){
+<<<<<<< HEAD
 	let chatID = obj.chatID;
 
 	// contact the supernode to get info about the chatroom
@@ -128,6 +133,17 @@ function fromBrowser_ConnectToRoom(obj){
 		// No action if the chat room is empty
 		joinedRooms.push(chatID)
 		console.log(`Become the first member of room ${chatID}`)
+=======
+	username = obj.username;
+	roomName = obj.roomName;
+
+	// start sending heartbeats to the server
+	setInterval( sendHeartbeatToServer, 2000);
+
+	if (obj.ip != undefined && obj.port != undefined && obj.identifier != undefined){
+		console.log(new Date().getTime(), "My browser has asked me to connect to ", obj.identifier);
+		connectAsClientToServer(obj.ip, obj.port, obj.identifier);
+>>>>>>> master
 	}
 }
 
@@ -392,6 +408,7 @@ function getIPAddressOfThisMachine(){
 }
 
 function sendHeartbeatToServer(){
+<<<<<<< HEAD
 	joinedRooms.forEach((room) => {
 		let data = {
 			userId: myTS.serverIdentifier,
@@ -410,4 +427,24 @@ function sendHeartbeatToServer(){
 			console.log(obj);
 		});
 	});
+=======
+	// send a heartbeat with username, myIP, myPort, and roomName
+	// (all of those are global variables accessible from this function)
+
+	// TODO: Change hardcoded values
+	request.post(
+		'https://central-server-b819d.appspot.com/heartbeat',
+		{ json: {
+				userId: 'TODO',
+				chatId: 'aCh2iBdMOpu6y3Bh1dEL',
+				ip: myIP,
+				port: myPort
+			} },
+		function (error, response, body) {
+			if (!error && response.statusCode == 200) {
+				//console.log(body);
+			}
+		}
+	);
+>>>>>>> master
 }
