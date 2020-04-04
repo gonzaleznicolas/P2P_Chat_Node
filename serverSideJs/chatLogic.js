@@ -3,6 +3,7 @@
 const ifaces = require('os').networkInterfaces();
 const lodash = require('lodash')
 const PriorityQueue = require('./priorityQueue.js');
+const short_uuid = require('short-uuid');
 
 module.exports = {
 	initialize: initialize
@@ -14,6 +15,7 @@ let socketToBrowser;
 
 let myPort;
 let myIP; // string
+let myIdentifier;
 let username;
 let roomName;
 
@@ -21,9 +23,11 @@ let chatLog = [];
 let serversImConnectedTo = new Map();
 let myTS = {time: 0, serverIdentifier: ""}
 let Q = new PriorityQueue();
-
+let uuid_generator = short_uuid();
 
 function initialize (IO_SERVER, IO_CLIENT, portImRunningOn){
+
+	myIdentifier = uuid_generator.new();
 
 	myIP = getIPAddressOfThisMachine();
 	console.log(new Date().getTime(), "myIP: " + myIP);
