@@ -23,11 +23,10 @@ let chatLog = [];
 let serversImConnectedTo = new Map();
 let myTS = {time: 0, serverIdentifier: ""}
 let Q = new PriorityQueue();
-let uuid_generator = short_uuid();
 
 function initialize (IO_SERVER, IO_CLIENT, portImRunningOn){
 
-	myIdentifier = uuid_generator.new();
+	myIdentifier = "node"+portImRunningOn; // short_uuid().new();
 
 	myIP = getIPAddressOfThisMachine();
 	console.log(new Date().getTime(), "myIP: " + myIP);
@@ -40,7 +39,7 @@ function initialize (IO_SERVER, IO_CLIENT, portImRunningOn){
 
 	// initialize TOB time stamp, and connect to self
 	myTS.time = 0;
-	myTS.serverIdentifier = serverIdentifier(myIP, myPort);
+	myTS.serverIdentifier = myIdentifier;
 	connectToSelf();
 
 	// start checking for TOB updates regularly
@@ -83,8 +82,8 @@ function fromBrowser_ConnectToRoom(obj){
 	roomName = obj.roomName;
 
 	if (obj.ip != undefined && obj.port != undefined && obj.identifier != undefined){
-		console.log(new Date().getTime(), "My browser has asked me to connect to ", serverIdentifier(obj.ip, obj.port));
-		connectAsClientToServer(obj.ip, obj.port);
+		console.log(new Date().getTime(), "My browser has asked me to connect to ", obj.identifier);
+		connectAsClientToServer(obj.ip, obj.port, obj.identifier);
 	}
 }
 
@@ -92,18 +91,20 @@ function fromBrowser_GiveTobUpdate(update){
 	tobSendUpdate(update);
 }
 
-function fromBrowser_SendMessageToSpecificServer(obj /* {toIp, toPort, msg} */){
-	let serverToSendMessageTo = serversImConnectedTo.get(serverIdentifier(obj.toIp, obj.toPort));
+function fromBrowser_SendMessageToSpecificServer(obj /* {toIp, toPort, toIdentifier, msg} */){
+	let serverToSendMessageTo = serversImConnectedTo.get(obj.toIdentifier);
 	if(serverToSendMessageTo == undefined){
 		console.log("Not connected to that server.");
 		return;
 	}
 
-	console.log(new Date().getTime(), "I will send the following message to server ", serverIdentifier(obj.toIp, obj.toPort), ":");
+	console.log(new Date().getTime(), "I will send the following message to server ", obj.toIdentifier, ":");
 	console.log(new Date().getTime(), obj.msg);
 	serverToSendMessageTo.socket.emit('FromOtherServer_MessageToSpecificServer', {
 		fromIp: myIP,
 		fromPort: myPort,
+		fromIdentifier: myIdentifier,
+		fromUser: username,
 		msg: obj.msg
 	});
 }
@@ -113,22 +114,22 @@ FROM OTHER SERVER EVENT HANDLERS
 ********************************************************/ 
 
 function fromOtherServer_iJustConnectedToYou(obj){
-	console.log(new Date().getTime(), "Server ", serverIdentifier(obj.ip, obj.port), " just connected to me.");
+	console.log(new Date().getTime(), "Server ", obj.identifier, " just connected to me.");
 	
 	// if im already connected to the server that just connected to me
-	let serverThatJustConnectedToMe = serversImConnectedTo.get(serverIdentifier(obj.ip, obj.port))
+	let serverThatJustConnectedToMe = serversImConnectedTo.get(obj.identifier);
 	if (serverThatJustConnectedToMe != undefined){
 		// update my record of its time stamp
-		console.log(new Date().getTime(), "Updating TS=", obj.TS.time, " for ", serverIdentifier(obj.ip, obj.port));
+		console.log(new Date().getTime(), "Updating TS=", obj.TS.time, " for ", obj.identifier);
 		serverThatJustConnectedToMe.TS.time = obj.TS.time;
 		serverThatJustConnectedToMe.TS.serverIdentifier = obj.TS.serverIdentifier;
 		chatLog = lodash.cloneDeep(obj.chatLog);
 		socketToBrowser.emit('FromServer_ChatLog', chatLog);
 	}
 
-	// connect to everything it is connected to (including myself - TOB algorithm calls for broadcasts that include self)
+	// connect to everything it is connected to
 	obj.allServerConnections.forEach( function(c) {
-		connectAsClientToServer(c.ip, c.port);
+		connectAsClientToServer(c.ip, c.port, c.identifier);
 	});
 }
 
@@ -137,7 +138,7 @@ function fromOtherServer_TobMessageOrAck(obj){
 }
 
 function fromOtherServer_MessageToSpecificServer(obj){
-	console.log(new Date().getTime(), "Server ", serverIdentifier(obj.fromIp, obj.fromPort), " sent me the message:");
+	console.log(new Date().getTime(), "Server ", obj.fromIdentifier, " sent me the message:");
 	console.log(new Date().getTime(), obj.msg);
 }
 
@@ -145,11 +146,11 @@ function fromOtherServer_MessageToSpecificServer(obj){
 CONNECTION FUNCTIONS
 ********************************************************/ 
 
-function connectAsClientToServer(ipToConnectTo, portToConnectTo){
-	if (serversImConnectedTo.has(serverIdentifier(ipToConnectTo, portToConnectTo)))
+function connectAsClientToServer(ipToConnectTo, portToConnectTo, identifierToConnectTo){
+	if (serversImConnectedTo.has(identifierToConnectTo))
 		return;
 
-	console.log(new Date().getTime(), "Going to try to connect to server ", serverIdentifier(ipToConnectTo, portToConnectTo));
+	console.log(new Date().getTime(), "Going to try to connect to server ", identifierToConnectTo);
 
 	let socketToServer = ioClient.connect(
 		"http://" + ipToConnectTo + ":" + portToConnectTo +"/",
@@ -157,20 +158,22 @@ function connectAsClientToServer(ipToConnectTo, portToConnectTo){
 	);
 
 	// need this so that when it disconnects, I know how to remove from my map
-	socketToServer.meshChatIdentifier = serverIdentifier(ipToConnectTo, portToConnectTo);
+	socketToServer.meshChatIdentifier = identifierToConnectTo;
 
 	socketToServer.on('connect', function(){
-		console.log(new Date().getTime(), "I successfully connected to server "+serverIdentifier(ipToConnectTo, portToConnectTo));
-		serversImConnectedTo.set(serverIdentifier(ipToConnectTo, portToConnectTo), {
+		console.log(new Date().getTime(), "I successfully connected to server "+identifierToConnectTo);
+		serversImConnectedTo.set(identifierToConnectTo, {
 			ip: ipToConnectTo,
 			port: portToConnectTo,
+			identifier: identifierToConnectTo,
 			socket: socketToServer,
-			TS: {time: 0, serverIdentifier: serverIdentifier(ipToConnectTo, portToConnectTo)}
+			TS: {time: 0, serverIdentifier: identifierToConnectTo}
 		});
 		printListOfServersImConnectedTo();
 		socketToServer.emit("FromOtherServer_iJustConnectedToYou", {
 			ip: myIP,
 			port: myPort,
+			identifier: myIdentifier,
 			TS: myTS,
 			allServerConnections: compileArrayOfServersImConnectedTo(),
 			chatLog: chatLog
@@ -186,7 +189,7 @@ function connectAsClientToServer(ipToConnectTo, portToConnectTo){
 }
 
 function connectToSelf(){
-	if (serversImConnectedTo.has(serverIdentifier(myIP, myPort)))
+	if (serversImConnectedTo.has(myIdentifier))
 		return;
 
 	let socketToSelf = ioClient.connect(
@@ -196,9 +199,10 @@ function connectToSelf(){
 
 	socketToSelf.on('connect', function(){
 		console.log(new Date().getTime(), "I successfully connected to myself.");
-		serversImConnectedTo.set(serverIdentifier(myIP, myPort), {
+		serversImConnectedTo.set(myIdentifier, {
 			ip: myIP,
 			port: myPort,
+			identifier: myIdentifier,
 			socket: socketToSelf,
 			TS: myTS
 		});
@@ -220,6 +224,7 @@ function tobSendUpdate(u){
 		server.socket.emit('FromOtherServer_TobMessageOrAck', {
 			fromIp: myIP,
 			fromPort: myPort,
+			fromIdentifier: myIdentifier,
 			fromUser: username,
 			messageOrAck: "message", // "message or ack"
 			message: u,
@@ -229,7 +234,7 @@ function tobSendUpdate(u){
 }
 
 function tobReceiveMessageOrAck(obj){
-	let from = serversImConnectedTo.get(serverIdentifier(obj.fromIp, obj.fromPort));
+	let from = serversImConnectedTo.get(obj.fromIdentifier);
 	from.TS.time = obj.TS.time;
 
 	let isMessage = (obj.messageOrAck == "message");
@@ -241,10 +246,11 @@ function tobReceiveMessageOrAck(obj){
 		myTS.time = obj.TS.time;
 
 		serversImConnectedTo.forEach(function (server){
-			if( !(server.ip == myIP && server.port == myPort) ){
+			if( server.identifier != myIdentifier ){
 				server.socket.emit('FromOtherServer_TobMessageOrAck', {
 					fromIp: myIP,
 					fromPort: myPort,
+					fromIdentifier: myIdentifier,
 					fromUser: username,
 					messageOrAck: "ack", // "message or ack"
 					TS: myTS
@@ -273,7 +279,7 @@ function tobApplyUpdates(){
 	let itr = serversImConnectedTo.values();
 	let result = itr.next();
 	while (!result.done) {
-		console.log(new Date().getTime(), "Process "+ serverIdentifier(result.value.ip, result.value.port)+" has time "+result.value.TS.time);
+		console.log(new Date().getTime(), "Process " + result.value.identifier + " has time "+result.value.TS.time);
 		if ( uts.time > result.value.TS.time )
 			utsIsSmallest = false;
 		result = itr.next();
@@ -308,14 +314,10 @@ function compileArrayOfServersImConnectedTo(){
 	let it = serversImConnectedTo.values();
 	let result = it.next();
 	while (!result.done) {
-		array.push({ip: result.value.ip, port: result.value.port});
+		array.push({ip: result.value.ip, port: result.value.port, identifier: result.value.identifier});
 		result = it.next();
 	}
 	return array;
-}
-
-function serverIdentifier(ip, port){
-	return ""+ip+":"+port;
 }
 
 function compareTimeStamps(a, b){
@@ -329,10 +331,6 @@ function compareTimeStamps(a, b){
 		else
 			return 0;
 	}
-}
-
-function tsCopy(ts){
-	return {time: ts.time, serverIdentifier: ts.serverIdentifier};
 }
 
 function getIPAddressOfThisMachine(){
