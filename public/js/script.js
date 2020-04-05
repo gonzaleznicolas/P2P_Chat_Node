@@ -36,12 +36,18 @@ function fromServer_AvailableRooms(chatRooms){
 	chatRooms.forEach( function (room) {
 		let roomElement = $("<div></div>");
 		roomElement.text(room.chatRoomName);
-		roomElement.addClass("roomElement");
 		roomElement.click(function(){
 			console.log("connecting to room "+ room.chatRoomName);
 			connectToRoom(room.chatRoomId);
+			changeToChatScreen();
 		});
 		$("#existingRooms").append(roomElement);
 	})
 	console.log(chatRooms);
+}
+
+function changeToChatScreen(){
+	$("#selectRoom").empty();
+	$("#selectRoom").hide();
+	$("#chat").show();
 }

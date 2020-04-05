@@ -112,6 +112,7 @@ function fromBrowser_ConnectToRoom(obj){
 	request(options, (err, res, obj) => {
 		chatMembers[chatID] = obj.members;
 		chatLog = obj.log;
+		socketToBrowser.emit('FromServer_ChatLog', chatLog);
 		console.log("chat history sent to me by server:", chatLog);
 		if (Array.isArray(chatMembers[chatID]) && chatMembers[chatID].length) {
 
