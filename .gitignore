@@ -1,3 +1,6 @@
 node_modules/
 
 \.vscode/
+/.idea/MeshChat.iml
+/.idea/misc.xml
+/.idea/modules.xml
