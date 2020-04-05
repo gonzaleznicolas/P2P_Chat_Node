@@ -1,10 +1,11 @@
 'use strict';
 
+const request = require('request');
 const ifaces = require('os').networkInterfaces();
 const lodash = require('lodash')
 const PriorityQueue = require('./priorityQueue.js');
 const short_uuid = require('short-uuid');
-const request = require('request');
+const supernodeEndPoint = "https://central-server-b819d.appspot.com" 
 
 module.exports = {
 	initialize: initialize
@@ -17,22 +18,27 @@ let socketToBrowser;
 let myPort;
 let myIP; // string
 let myIdentifier;
-let username;
-let roomName;
+let userName;
 
 let chatLog = [];
+let chatRooms = [];
+let joinedRooms = [];
+let chatMembers = {};
+let chatLogs = {};
 let serversImConnectedTo = new Map();
 let myTS = {time: 0, serverIdentifier: ""}
 let Q = new PriorityQueue();
 
 function initialize (IO_SERVER, IO_CLIENT, portImRunningOn){
 
-	myIdentifier = "node"+portImRunningOn; // short_uuid().new();
+	myIdentifier = short_uuid().new();
+	userName = short_uuid().new();
 
 	myIP = getIPAddressOfThisMachine();
 	console.log(new Date().getTime(), "myIP: " + myIP);
 	myPort = portImRunningOn;
 	console.log(new Date().getTime(), "myPort: " + myPort);
+	console.log(new Date().getTime(), "myID: " + myIdentifier);
 
 	ioServer = IO_SERVER;
 	ioServer.on('connection', ioServerOnConnection);
@@ -45,6 +51,17 @@ function initialize (IO_SERVER, IO_CLIENT, portImRunningOn){
 
 	// start checking for TOB updates regularly
 	setInterval( tobApplyUpdates, 500);
+
+	// get chatrooms from the server
+	let options = {
+		url: supernodeEndPoint + "/chatrooms",
+		method: 'GET',
+	};
+
+	request(options, (err, res, body) => {
+		chatRooms = (JSON.parse(body)).rooms;
+		console.log("Available Rooms:\n", chatRooms);
+	});
 }
 
 function ioServerOnConnection(socketToClient){
@@ -73,19 +90,49 @@ FROM BROWSER EVENT HANDLERS
 function fromBrowser_ImYourBrowser(){
 	socketToBrowser = this; // save the socket to the browser so I can send messages at any time
 	console.log(new Date().getTime(), "Browser has connected.")
+	socketToBrowser.emit('FromServer_AvailableRooms', chatRooms);
 }
 
 function fromBrowser_ConnectToRoom(obj){
-	username = obj.username;
-	roomName = obj.roomName;
+	let chatID = obj.chatID;
 
-	// start sending heartbeats to the server
-	setInterval( sendHeartbeatToServer, 2000);
+	// contact the supernode to get info about the chatroom
+	let data = {
+		chatId: chatID,
+		userId: myTS.serverIdentifier,
+		ip: myIP,
+		port: myPort
+	};
 
-	if (obj.ip != undefined && obj.port != undefined && obj.identifier != undefined){
-		console.log(new Date().getTime(), "My browser has asked me to connect to ", obj.identifier);
-		connectAsClientToServer(obj.ip, obj.port, obj.identifier);
-	}
+	let options = {
+		url: supernodeEndPoint + "/chatrooms",
+		method: 'POST',
+		json: data
+	};
+
+	request(options, (err, res, obj) => {
+		chatMembers[chatID] = obj.members;
+		chatLogs[chatID] = obj.log;
+		if (Array.isArray(chatMembers[chatID]) && chatMembers[chatID].length) {
+
+			for (const member of chatMembers[chatID]) {
+				if (member.userId != myIdentifier && (member.ip != myIP || member.port != myPort)) {
+					connectAsClientToServer(member.ip, member.port, member.userId);
+					joinedRooms.push(chatID)
+					// start sending heartbeats to the server
+					setInterval( sendHeartbeatToServer, 2000);
+					return;
+				}
+			}
+			// Error handling here. All endpoints are invalid.
+		} else {
+			// No action if the chat room is empty
+			console.log(`Become the first member of room ${chatID}`)
+			joinedRooms.push(chatID)
+			// start sending heartbeats to the server
+			setInterval( sendHeartbeatToServer, 2000);
+			}
+	});
 }
 
 function fromBrowser_GiveTobUpdate(update){
@@ -148,8 +195,10 @@ CONNECTION FUNCTIONS
 ********************************************************/ 
 
 function connectAsClientToServer(ipToConnectTo, portToConnectTo, identifierToConnectTo){
-	if (serversImConnectedTo.has(identifierToConnectTo))
+	if (serversImConnectedTo.has(identifierToConnectTo)) {
+		console.log("Already connected to ", identifierToConnectTo);
 		return;
+	}
 
 	console.log(new Date().getTime(), "Going to try to connect to server ", identifierToConnectTo);
 
@@ -162,7 +211,7 @@ function connectAsClientToServer(ipToConnectTo, portToConnectTo, identifierToCon
 	socketToServer.meshChatIdentifier = identifierToConnectTo;
 
 	socketToServer.on('connect', function(){
-		console.log(new Date().getTime(), "I successfully connected to server "+identifierToConnectTo);
+		console.log(new Date().getTime(), "I successfully connected to server " + identifierToConnectTo);
 		serversImConnectedTo.set(identifierToConnectTo, {
 			ip: ipToConnectTo,
 			port: portToConnectTo,
@@ -226,7 +275,7 @@ function tobSendUpdate(u){
 			fromIp: myIP,
 			fromPort: myPort,
 			fromIdentifier: myIdentifier,
-			fromUser: username,
+			fromUser: userName,
 			messageOrAck: "message", // "message or ack"
 			message: u,
 			TS: myTS
@@ -252,7 +301,7 @@ function tobReceiveMessageOrAck(obj){
 					fromIp: myIP,
 					fromPort: myPort,
 					fromIdentifier: myIdentifier,
-					fromUser: username,
+					// fromUser: username,
 					messageOrAck: "ack", // "message or ack"
 					TS: myTS
 				});
@@ -349,22 +398,24 @@ function getIPAddressOfThisMachine(){
 }
 
 function sendHeartbeatToServer(){
-	// send a heartbeat with username, myIP, myPort, and roomName
-	// (all of those are global variables accessible from this function)
-
-	// TODO: Change hardcoded values
-	request.post(
-		'https://central-server-b819d.appspot.com/heartbeat',
-		{ json: {
-				userId: 'TODO',
-				chatId: 'aCh2iBdMOpu6y3Bh1dEL',
-				ip: myIP,
-				port: myPort
-			} },
-		function (error, response, body) {
-			if (!error && response.statusCode == 200) {
-				//console.log(body);
+	joinedRooms.forEach((room) => {
+		let data = {
+			userId: myTS.serverIdentifier,
+			chatId: room,
+			ip: myIP,
+			port: myPort
+		};
+	
+		let options = {
+			url: supernodeEndPoint + "/heartbeat",
+			method: 'POST',
+			json: data
+		};
+	
+		request(options, (err, res, obj) => {
+			if (!Object.keys(obj).length) {
+				console.log("Heartbeat not recevied");
 			}
-		}
-	);
+		});
+	});
 }

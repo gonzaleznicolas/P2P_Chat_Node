@@ -3,13 +3,7 @@ services:
   node:
     build: .
     image: p2pchatapp
-    command: 'node index.js 3000'
+    command: 'node index.js 3002'
     # volumes:
     #   - .:/usr/app
-    ports: 
-      - 3000
-    networks: 
-      - socket-net
-
-networks:
-  socket-net:
+    network_mode: host 
