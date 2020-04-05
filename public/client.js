@@ -77,34 +77,3 @@ function fromServer_ChatLog(chatLog){
     console.log("The whole chat history:");
     console.log(chatLog);
 }
-
-
-
-
-
-// start doc and listen
-$(document).ready(onLoad());
-
-function onLoad() {
-    console.log("initiating client.js");
-
-    /*
-    any client side necessary emissions here
-
-    */
-
-    //init variables
-    let socket = io();
-
-    // catch user connections
-    socket.on('user-connection-detected', function(username){
-        console.log('User has connected and now inside onload() ');
-        // add user to front end list
-        username = 'ASSIGNME';
-        // add emits here to add a user
-        //console.log('name assigned')
-
-    });
-
-}
-
