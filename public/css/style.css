@@ -149,7 +149,7 @@ img{ max-width:100%;}
   font-size: 14px;
   margin: 0;
   padding: 5px 10px 5px 12px;
-  width: 100%;
+  width: 50%;
 }
 .time_date {
   color: #747474;
@@ -157,7 +157,6 @@ img{ max-width:100%;}
   font-size: 12px;
   margin: 8px 0 0;
 }
-.received_withd_msg { width: 57%;}
 .mesgs {
   float: left;
   padding: 30px 15px 0 25px;
@@ -173,9 +172,10 @@ img{ max-width:100%;}
   width:100%;
 }
 .outgoing_msg{ overflow:hidden; margin:26px 0 26px;}
+.incoming_msg{ overflow:hidden; margin:26px 0 26px;}
 .sent_msg {
   float: right;
-  width: 46%;
+  width: 50%;
 }
 .input_msg_write input {
   background: rgba(0, 0, 0, 0) none repeat scroll 0 0;
