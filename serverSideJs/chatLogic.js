@@ -196,7 +196,7 @@ CONNECTION FUNCTIONS
 
 function connectAsClientToServer(ipToConnectTo, portToConnectTo, identifierToConnectTo){
 	if (serversImConnectedTo.has(identifierToConnectTo)) {
-		console.log("Already connected to ", identifierToConnectTo);
+		//console.log("Already connected to ", identifierToConnectTo);
 		return;
 	}
 
