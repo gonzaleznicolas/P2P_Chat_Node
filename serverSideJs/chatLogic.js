@@ -18,13 +18,12 @@ let socketToBrowser;
 let myPort;
 let myIP; // string
 let myIdentifier;
-let userName;
+let myUserName;
 
 let chatLog = [];
 let chatRooms = [];
 let joinedRooms = [];
 let chatMembers = {};
-let chatLogs = {};
 let serversImConnectedTo = new Map();
 let myTS = {time: 0, serverIdentifier: ""}
 let Q = new PriorityQueue();
@@ -32,7 +31,7 @@ let Q = new PriorityQueue();
 function initialize (IO_SERVER, IO_CLIENT, portImRunningOn){
 
 	myIdentifier = short_uuid().new();
-	userName = short_uuid().new();
+	myUserName = short_uuid().new();
 
 	myIP = getIPAddressOfThisMachine();
 	console.log(new Date().getTime(), "myIP: " + myIP);
@@ -112,7 +111,8 @@ function fromBrowser_ConnectToRoom(obj){
 
 	request(options, (err, res, obj) => {
 		chatMembers[chatID] = obj.members;
-		chatLogs[chatID] = obj.log;
+		chatLog = obj.log;
+		console.log("chat history sent to me by server:", chatLog);
 		if (Array.isArray(chatMembers[chatID]) && chatMembers[chatID].length) {
 
 			for (const member of chatMembers[chatID]) {
@@ -152,7 +152,7 @@ function fromBrowser_SendMessageToSpecificServer(obj /* {toIp, toPort, toIdentif
 		fromIp: myIP,
 		fromPort: myPort,
 		fromIdentifier: myIdentifier,
-		fromUser: username,
+		fromUser: myUserName,
 		msg: obj.msg
 	});
 }
@@ -196,7 +196,7 @@ CONNECTION FUNCTIONS
 
 function connectAsClientToServer(ipToConnectTo, portToConnectTo, identifierToConnectTo){
 	if (serversImConnectedTo.has(identifierToConnectTo)) {
-		console.log("Already connected to ", identifierToConnectTo);
+		//console.log("Already connected to ", identifierToConnectTo);
 		return;
 	}
 
@@ -275,7 +275,7 @@ function tobSendUpdate(u){
 			fromIp: myIP,
 			fromPort: myPort,
 			fromIdentifier: myIdentifier,
-			fromUser: userName,
+			fromUser: myUserName,
 			messageOrAck: "message", // "message or ack"
 			message: u,
 			TS: myTS
@@ -301,7 +301,7 @@ function tobReceiveMessageOrAck(obj){
 					fromIp: myIP,
 					fromPort: myPort,
 					fromIdentifier: myIdentifier,
-					// fromUser: username,
+					fromUser: myUserName,
 					messageOrAck: "ack", // "message or ack"
 					TS: myTS
 				});
