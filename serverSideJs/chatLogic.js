@@ -9,7 +9,7 @@ const supernodeEndPoint = "https://central-server-b819d.appspot.com"
 
 module.exports = {
 	initialize: initialize
-}
+};
 
 let ioServer;
 let ioClient;
@@ -414,8 +414,38 @@ function sendHeartbeatToServer(){
 	
 		request(options, (err, res, obj) => {
 			if (!Object.keys(obj).length) {
-				console.log("Heartbeat not recevied");
+				console.log("Heartbeat not received");
+			}
+			if (res.body === 'Heartbeat received - Send message history') {
+				console.log('Got a polling request')
+				sendLogToServer(room);
 			}
 		});
+	});
+}
+
+function sendLogToServer(room){
+	const logToSend = chatLog.map((value) => {
+		return {
+			userId: value.fromUser,
+			message: value.message
+		}
+	});
+
+	let data = {
+		chatId: room,
+		log: logToSend
+	};
+
+	let options = {
+		url: supernodeEndPoint + "/message",
+		method: 'POST',
+		json: data
+	};
+
+	request(options, (err, res, obj) => {
+		if (!Object.keys(obj).length) {
+			console.log("Heartbeat not received");
+		}
 	});
 }
