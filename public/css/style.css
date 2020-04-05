@@ -72,9 +72,11 @@ body {
 
 /* select chat */
 
-#selectChat{
-	background: black;
+.roomElement{
+	color: "red";
 }
+
+
 
 
   /* -- chat -- */
