@@ -161,7 +161,7 @@ img{ max-width:100%;}
 .mesgs {
   float: left;
   padding: 30px 15px 0 25px;
-  width: 60%;
+  width: 100%;
 }
 
  .sent_msg p {
@@ -190,15 +190,15 @@ img{ max-width:100%;}
 .msg_send_btn {
   background: #05728f none repeat scroll 0 0;
   border: medium none;
-  border-radius: 50%;
+  border-radius: 5%;
   color: #fff;
   cursor: pointer;
   font-size: 17px;
   height: 33px;
   position: absolute;
-  right: 0;
-  top: 11px;
-  width: 33px;
+  right: 5px;
+  top: 5px;
+  width: 60px;
 }
 .messaging { padding: 0 0 50px 0;}
 
