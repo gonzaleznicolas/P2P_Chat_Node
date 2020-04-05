@@ -29,6 +29,8 @@ function fromServer_OrderedUpdate(update){
 function fromServer_ChatLog(chatLog){
 	console.log("The whole chat history:");
 	console.log(chatLog);
+
+	$("#message_history").empty();
 }
 
 function fromServer_AvailableRooms(chatRooms){
