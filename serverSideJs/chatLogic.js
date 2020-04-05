@@ -427,7 +427,7 @@ function sendHeartbeatToServer(){
 function sendLogToServer(room){
 	const logToSend = chatLog.map((value) => {
 		return {
-			userId: value.fromUser,
+			username: value.fromUser,
 			message: value.message
 		}
 	});
