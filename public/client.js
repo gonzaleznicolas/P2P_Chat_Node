@@ -58,8 +58,8 @@ function fromServer_OrderedUpdate(update){
         +
         '</p>'
     ));
-
     // like so;
+    // this will keep the chat window auto scrolled to bottom
     $(".msg_history").scrollTop($("#messages")[0].scrollHeight);
 }
 
@@ -88,14 +88,8 @@ $(document).ready(onLoad());
 function onLoad() {
     console.log("initiating client.js");
 
-
     /*
-    flow
-
-    event send receive
-    on  user connection detected
-    mirror / / user connection detected
-      need to decide on cookie name or new name
+    any client side necessary emissions here
 
     */
 
@@ -109,75 +103,6 @@ function onLoad() {
         username = 'ASSIGNME';
         // add emits here to add a user
         //console.log('name assigned')
-
-    });
-
-    //catch username change
-    // TODO
-    //  add serverside catch
-    socket.on('updated username', function(newusername){
-        document.cookie = newusername;
-        $('#yourname').text("* You are " + username);
-        username = newusername;
-    });
-
-
-    //catch disconnects
-    // TODO
-    // add serverside catch
-    socket.on('disconnected user occurred', function(temp){
-        socket.emit("timestamp ping");
-        socket.on("ts ping back", function(ts) {
-            correctts = tsconvert(ts)
-        });
-        $('#messages').append($('<li>').text(correctts + " : " + temp + " has left the room."));
-        socket.emit("upkeep pool");
-    });
-
-
-    // send message
-    $('form').submit(function(e){
-        let val = $('#m').val();
-        giveUpdate(val);
-        console.log('firing chat message send');
-        $('#m').val(''); // blank out the form
-        return false; // ret false
-    });
-
-    // Whenever the server emits 'user joined', log it in the chat body
-    socket.on('user joined', function(data){
-        // second mistake, casting this as a local seems to have caused
-        // some serious issues
-        // fixed by declaring as a global var. probably issues upon reconnection redeclaring it
-        // caused it to be undefined
-        // find out reason later, but this is fixed
-        //let correctts; // casting this to empty string initially somehow royally fucked me
-        //console.log('firing user joined alert');
-        socket.emit("timestamp ping");
-        socket.on("ts ping back", function(ts) {
-            //console.log('formatting ts');
-            correctts = tsconvert(ts);
-            //console.log('the correct tts after defining is :' + correctts);
-        });
-        //console.log('the correct tts is :' + correctts);
-        let message = ''; // blank
-        message = "there are " + data.numUsers + " participants";
-        //console.log('the correct tts value prior to appending is :' + correctts);
-        $('#messages').append($('<li>').text(String(correctts) + ": " + String(message)));
-    });
-
-    // user pool update on the right side
-    socket.on('updated userpool', function (userpool) {
-        //console.log("entering userpol update func")
-        $('#userpool').text(" "); // blank out pool
-        for (let i = 0; i < userpool.length; i++) {
-            $('#userpool').append($('<li>').html('<span style="color:#' + userpool[i].color + '">'
-                + userpool[i].username + '</span>'));
-        }
-    });
-
-    socket.on('color-set', function (color) {
-        localcolor = color;
 
     });
 
