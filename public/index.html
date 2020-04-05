@@ -9,7 +9,6 @@
     </head>
 
     <body>
-
       <nav class="navbar navbar-expand-md">
         <a class="navbar-brand" href="#">Mesh Chat - P2P Social Distancing</a>
         <button class="navbar-toggler navbar-dark" type="button" data-toggle="collapse" data-target="#main-navigation">
@@ -84,36 +83,26 @@
                           </div>
                         </div>
                         <div class="outgoing_msg">
+
+
+
                           <div class="sent_msg">
-                            <p>Test Reply</p>
-                            <span class="time_date"> 11:01 AM    |    June 9</span> </div>
-                        </div>
-                        <div class="incoming_msg">
-                          <div class="incoming_msg_img"> <img src="images/avatar.png" alt="message"> </div>
-                          <div class="received_msg">
-                            <div class="received_withd_msg">
-                              <p>Lorem Epsum Test 2</p>
-                              <span class="time_date"> 11:01 AM    |    Yesterday</span></div>
+                            <p><ul id="messages"></ul> </p>
+
                           </div>
                         </div>
-                        <div class="outgoing_msg">
-                          <div class="sent_msg">
-                            <p>Social distancing</p>
-                            <span class="time_date"> 11:01 AM    |    Today</span> </div>
-                        </div>
-                        <div class="incoming_msg">
-                          <div class="incoming_msg_img"> <img src="images/avatar.png" alt="message"> </div>
-                          <div class="received_msg">
-                            <div class="received_withd_msg">
-                              <p>No</p>
-                              <span class="time_date"> 11:01 AM    |    Today</span></div>
-                          </div>
-                        </div>
+
                       </div>
+                      <!-- end of history -->
+
+                      <!-- type a message enter -->
                       <div class="type_msg">
                         <div class="input_msg_write">
-                          <input type="text" class="write_msg" placeholder="Type a message" />
-                          <button class="msg_send_btn" type="button"><i class="fa fa-paper-plane-o" aria-hidden="true"></i></button>
+
+                          <form action="">
+                            <input id="m" autocomplete="off" placeholder="Type a message" /> <button class="msg_send_btn" type="button">Send</button>
+                          </form>
+
                         </div>
                       </div>
                     </div>
@@ -143,11 +132,12 @@
         <div class="footer-copyright text-center">© CPSC559 - Distributed Systems 2020 - jk</div>
       </footer>
 
-
-      <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+      <!--JavaScript at end of body for optimized loading-->
+      <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
       <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
       <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
-      <script src="main.js"></script>
+      <script src="/socket.io/socket.io.js"></script>
+      <script src="client.js" type="text/javascript"></script>
     </body>
 
     </html>
