@@ -31,6 +31,16 @@ function fromServer_ChatLog(chatLog){
 	console.log(chatLog);
 
 	$("#message_history").empty();
+
+	chatLog.forEach( function (msgObject) {
+		$("#message_history").append(`
+			<div class="incoming_msg">
+				<div class="received_withd_msg">
+					<p><b>Nico</b>&nbsp ${msgObject.message}</p>
+				</div> 
+			</div>
+		`);
+	})
 }
 
 function fromServer_AvailableRooms(chatRooms){
