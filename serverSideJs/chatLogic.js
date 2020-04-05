@@ -112,6 +112,7 @@ function fromBrowser_ConnectToRoom(obj){
 	request(options, (err, res, obj) => {
 		chatMembers[chatID] = obj.members;
 		chatLog = obj.log;
+		console.log("chat history sent to me by server:", chatLog);
 		if (Array.isArray(chatMembers[chatID]) && chatMembers[chatID].length) {
 
 			for (const member of chatMembers[chatID]) {
@@ -300,7 +301,7 @@ function tobReceiveMessageOrAck(obj){
 					fromIp: myIP,
 					fromPort: myPort,
 					fromIdentifier: myIdentifier,
-					fromUser: myUsername,
+					fromUser: myUserName,
 					messageOrAck: "ack", // "message or ack"
 					TS: myTS
 				});
