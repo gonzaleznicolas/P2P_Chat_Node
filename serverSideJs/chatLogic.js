@@ -114,17 +114,16 @@ function fromBrowser_ConnectToRoom(obj){
 		chatMembers[chatID] = obj.members;
 		chatLogs[chatID] = obj.log;
 		if (Array.isArray(chatMembers[chatID]) && chatMembers[chatID].length) {
-			chatMembers[chatID].forEach( (member) => {
-				if (member != undefined) {
-					if (member.userId != myIdentifier && (member.ip != myIP || member.port != myPort)) {
-						connectAsClientToServer(member.ip, member.port, member.userId);
-						joinedRooms.push(chatID)
-						// start sending heartbeats to the server
-						setInterval( sendHeartbeatToServer, 2000);
-						return;
-					}
+
+			for (const member of chatMembers[chatID]) {
+				if (member.userId != myIdentifier && (member.ip != myIP || member.port != myPort)) {
+					connectAsClientToServer(member.ip, member.port, member.userId);
+					joinedRooms.push(chatID)
+					// start sending heartbeats to the server
+					setInterval( sendHeartbeatToServer, 2000);
+					return;
 				}
-			});
+			}
 			// Error handling here. All endpoints are invalid.
 		} else {
 			// No action if the chat room is empty
