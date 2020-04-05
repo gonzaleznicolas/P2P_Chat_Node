@@ -26,7 +26,7 @@ let joinedRooms = [];
 let chatMembers = {};
 let chatLogs = {};
 let serversImConnectedTo = new Map();
-let myTS = {time: 0, serverIdentifier: "", userName: ''}
+let myTS = {time: 0, serverIdentifier: ""}
 let Q = new PriorityQueue();
 
 function initialize (IO_SERVER, IO_CLIENT, portImRunningOn){
@@ -47,7 +47,6 @@ function initialize (IO_SERVER, IO_CLIENT, portImRunningOn){
 	// initialize TOB time stamp, and connect to self
 	myTS.time = 0;
 	myTS.serverIdentifier = myIdentifier;
-	myTS.userName = userName;
 	connectToSelf();
 
 	// start checking for TOB updates regularly
@@ -113,27 +112,27 @@ function fromBrowser_ConnectToRoom(obj){
 
 	request(options, (err, res, obj) => {
 		chatMembers[chatID] = obj.members;
-		// console.log("Current members:\n", chatMembers[chatID]);
 		chatLogs[chatID] = obj.log;
 		if (Array.isArray(chatMembers[chatID]) && chatMembers[chatID].length) {
-			console.log("Try following endpoints:", chatMembers[chatID]);
-			for (var member in chatMembers[chatID]) {
-				if (member.userId != myIdentifier && member.ip != myIP && member.port != myPort) {
-					console.log(`Try connecting to ${chatMembers[chatID][0].ip}:${chatMembers[chatID][0].port}......`);
-					connectAsClientToServer(chatMembers[chatID][0].ip, chatMembers[chatID][0].port, member.userId);
-					joinedRooms.push(chatID)
-					// start sending heartbeats to the server
-					setInterval( sendHeartbeatToServer, 2000);
-					break;
+			chatMembers[chatID].forEach( (member) => {
+				if (member != undefined) {
+					if (member.userId != myIdentifier && (member.ip != myIP || member.port != myPort)) {
+						connectAsClientToServer(member.ip, member.port, member.userId);
+						joinedRooms.push(chatID)
+						// start sending heartbeats to the server
+						setInterval( sendHeartbeatToServer, 2000);
+						return;
+					}
 				}
-			}
+			});
+			// Error handling here. All endpoints are invalid.
 		} else {
 			// No action if the chat room is empty
 			console.log(`Become the first member of room ${chatID}`)
 			joinedRooms.push(chatID)
 			// start sending heartbeats to the server
 			setInterval( sendHeartbeatToServer, 2000);
-		}
+			}
 	});
 }
 
