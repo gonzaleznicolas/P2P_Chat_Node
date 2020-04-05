@@ -1,4 +1,5 @@
 let socket;
+let state = "browsingRooms"; // "browsingRooms" or "inRoom"
 
 $(function () {
 	socket = io({reconnection: false});
@@ -10,11 +11,6 @@ $(function () {
 	socket.emit('FromBrowser_ImYourBrowser');
 
 });
-
-
-// function connectToRoom(username, roomName, ip, port, identifier){
-// 	socket.emit('FromBrowser_ConnectToRoom', {username: username, roomName: roomName, ip: ip, port: port, identifier: identifier});
-// }
 
 function connectToRoom(chatID){
 	socket.emit('FromBrowser_ConnectToRoom', {chatID: chatID});
@@ -30,16 +26,6 @@ function fromServer_OrderedUpdate(update){
 	console.log(update.fromUser, ":", update.message);
 }
 
-// When a new user joins, everyone else currently in the chat
-// will send its chat log to the newcomer so that the new user has the chat history.
-// this function is called when the current user receives a chat log. Unfortunately,
-// EVERYONE in the chat will send the chat log, so if there are currently 3 users in a chat room,
-// and I join, all three of them will send me their chat log. This function will be called each of those times.
-// so UI team, please modify this function so that when it is called, the browser removes all the messages
-// on the screen, and replaces them with the ones passed into this function. This will only happen when the
-// newcomer first joins, so its not a big issue. Of course it would be nice if just one of the chat participants
-// sent it. But trust me on this one, it gets really complicated to make sure only one of them sends it.
-// so its easier to just do this, and it will happen so quickly that it will not be noticeable.D
 function fromServer_ChatLog(chatLog){
 	console.log("The whole chat history:");
 	console.log(chatLog);

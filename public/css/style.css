@@ -70,6 +70,12 @@ body {
 	padding: 40px 0;
   }
 
+/* select chat */
+
+#selectChat{
+	background: black;
+}
+
 
   /* -- chat -- */
 
@@ -153,7 +159,6 @@ img{ max-width:100%;}
 }
 .time_date {
   color: #747474;
-  display: block;
   font-size: 12px;
   margin: 8px 0 0;
 }
