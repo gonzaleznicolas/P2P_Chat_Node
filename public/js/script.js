@@ -1,5 +1,4 @@
 let socket;
-let state = "browsingRooms"; // "browsingRooms" or "inRoom"
 
 $(function () {
 	socket = io({reconnection: false});
