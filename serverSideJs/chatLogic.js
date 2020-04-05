@@ -38,6 +38,7 @@ function initialize (IO_SERVER, IO_CLIENT, portImRunningOn){
 	console.log(new Date().getTime(), "myIP: " + myIP);
 	myPort = portImRunningOn;
 	console.log(new Date().getTime(), "myPort: " + myPort);
+	console.log(new Date().getTime(), "myID: " + myIdentifier);
 
 	ioServer = IO_SERVER;
 	ioServer.on('connection', ioServerOnConnection);
@@ -51,9 +52,6 @@ function initialize (IO_SERVER, IO_CLIENT, portImRunningOn){
 
 	// start checking for TOB updates regularly
 	setInterval( tobApplyUpdates, 500);
-
-	// start sending heartbeats to the server
-	setInterval( sendHeartbeatToServer, 30000);
 
 	// get chatrooms from the server
 	let options = {
@@ -118,15 +116,23 @@ function fromBrowser_ConnectToRoom(obj){
 		// console.log("Current members:\n", chatMembers[chatID]);
 		chatLogs[chatID] = obj.log;
 		if (Array.isArray(chatMembers[chatID]) && chatMembers[chatID].length) {
-			console.log(`Try connecting to ${chatMembers[chatID][0].ip}:${chatMembers[chatID][0].port}......`);
-			connectAsClientToServer(chatMembers[chatID][0].ip, chatMembers[chatID][0].port);
-			// TO-DO 
-			// fallback to other member of the room, if the first member is not responsive
-			joinedRooms.push(chatID)
+			console.log("Try following endpoints:", chatMembers[chatID]);
+			for (var member in chatMembers[chatID]) {
+				if (member.userId != myIdentifier && member.ip != myIP && member.port != myPort) {
+					console.log(`Try connecting to ${chatMembers[chatID][0].ip}:${chatMembers[chatID][0].port}......`);
+					connectAsClientToServer(chatMembers[chatID][0].ip, chatMembers[chatID][0].port, member.userId);
+					joinedRooms.push(chatID)
+					// start sending heartbeats to the server
+					setInterval( sendHeartbeatToServer, 2000);
+					break;
+				}
+			}
 		} else {
 			// No action if the chat room is empty
-			joinedRooms.push(chatID)
 			console.log(`Become the first member of room ${chatID}`)
+			joinedRooms.push(chatID)
+			// start sending heartbeats to the server
+			setInterval( sendHeartbeatToServer, 2000);
 		}
 	});
 }
@@ -190,10 +196,11 @@ function fromOtherServer_MessageToSpecificServer(obj){
 CONNECTION FUNCTIONS
 ********************************************************/ 
 
-function connectAsClientToServer(ipToConnectTo, portToConnectTo){
-	let identifierToConnectTo = myTS.serverIdentifier;
-	if (serversImConnectedTo.has(identifierToConnectTo))
+function connectAsClientToServer(ipToConnectTo, portToConnectTo, identifierToConnectTo){
+	if (serversImConnectedTo.has(identifierToConnectTo)) {
+		console.log("Already connected to ", identifierToConnectTo);
 		return;
+	}
 
 	console.log(new Date().getTime(), "Going to try to connect to server ", identifierToConnectTo);
 
@@ -206,7 +213,7 @@ function connectAsClientToServer(ipToConnectTo, portToConnectTo){
 	socketToServer.meshChatIdentifier = identifierToConnectTo;
 
 	socketToServer.on('connect', function(){
-		console.log(new Date().getTime(), "I successfully connected to server "+identifierToConnectTo);
+		console.log(new Date().getTime(), "I successfully connected to server " + identifierToConnectTo);
 		serversImConnectedTo.set(identifierToConnectTo, {
 			ip: ipToConnectTo,
 			port: portToConnectTo,
@@ -270,7 +277,7 @@ function tobSendUpdate(u){
 			fromIp: myIP,
 			fromPort: myPort,
 			fromIdentifier: myIdentifier,
-			fromUser: username,
+			fromUser: userName,
 			messageOrAck: "message", // "message or ack"
 			message: u,
 			TS: myTS
@@ -408,7 +415,9 @@ function sendHeartbeatToServer(){
 		};
 	
 		request(options, (err, res, obj) => {
-			console.log(obj);
+			if (!Object.keys(obj).length) {
+				console.log("Heartbeat not recevied");
+			}
 		});
 	});
 }
