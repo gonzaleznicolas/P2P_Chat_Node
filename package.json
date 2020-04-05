@@ -7,6 +7,7 @@
     "express": "^4.17.1",
     "lodash": "^4.17.15",
     "request": "^2.88.2",
+    "short-uid": "^0.1.0",
     "short-uuid": "^3.1.1",
     "socket.io": "^2.3.0"
   },
