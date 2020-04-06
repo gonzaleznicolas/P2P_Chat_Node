@@ -44,7 +44,7 @@ function giveUpdate(msg){
 
 // this function gets called when there is a new message. Modify this function so the message is displayed on the screen
 function fromServer_OrderedUpdate(msgObject){
-	addMessageOnRight(msgObject.username, msgObject.message)
+	addMessageToScreen(msgObject.userId, msgObject.username, msgObject.message)
 }
 
 function fromServer_ChatLog(chatLog){
@@ -54,8 +54,17 @@ function fromServer_ChatLog(chatLog){
 	$("#message_history").empty();
 
 	chatLog.forEach( function (msgObject) {
-		addMessageOnLeft(msgObject.username, msgObject.message)
+		addMessageToScreen(msgObject.userId, msgObject.username, msgObject.message)
 	});
+}
+
+function addMessageToScreen(userId, username, message){
+	if (userId == myUserId){
+		addMessageOnRight(username, message);
+	}
+	else{
+		addMessageOnLeft(username, message);
+	}
 }
 
 function addMessageOnLeft(username, message){
