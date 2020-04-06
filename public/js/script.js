@@ -24,6 +24,16 @@ $(function () {
 		}
 	});
 
+	// for adding a new chatroom
+	$("#addNewChatroomButton").click(() => {
+
+		//----placeholder logic----
+		console.log("New Room is " + $("#newChatroomName").val());
+		//----placeholder logic----
+
+		$("#newChatroomName").val('');
+	});
+
 
 });
 
