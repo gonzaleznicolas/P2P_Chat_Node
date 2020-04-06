@@ -93,7 +93,7 @@ function fromBrowser_ImYourBrowser(){
 	sendBrowserListOfRoomsIntervalObj = setInterval(()=>{socketToBrowser.emit('FromServer_AvailableRooms', chatRooms);}, 1000);
 
 	socketToBrowser.on("disconnect", function(){
-		console.log("Browser disconnected. Stop sending it available rooms.");
+		console.log(new Date().getTime(), "Browser disconnected. Stop sending it available rooms.");
 		clearInterval(sendBrowserListOfRoomsIntervalObj);
 	});
 
