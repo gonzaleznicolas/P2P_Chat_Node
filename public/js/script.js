@@ -67,7 +67,7 @@ function fromServer_ChatLog(chatLog){
 		$("#message_history").append(`
 			<div class="incoming_msg">
 				<div class="received_withd_msg">
-					<p><b>Nico</b>&nbsp ${msgObject.message}</p>
+					<p><b>${msgObject.username}</b>&nbsp ${msgObject.message}</p>
 				</div>
 			</div>
 		`);

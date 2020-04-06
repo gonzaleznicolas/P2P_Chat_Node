@@ -368,7 +368,7 @@ function tobApplyUpdates(){
 		Q.dequeue();
 		console.log(new Date().getTime(), "APPLYING UPDATE:");
 		console.log(new Date().getTime(), update);
-		chatLog.push(update);
+		chatLog.push({userId: update.fromIdentifier, username: update.fromUser, message: update.message});
 		socketToBrowser.emit('FromServer_OrderedUpdate', update);
 	}
 
@@ -480,7 +480,8 @@ function sendLogToServer(room){
 
 	const logToSend = chatLog.map((value) => {
 		return {
-			username: value.fromUser,
+			userId: value.userId,
+			username: value.username,
 			message: value.message
 		}
 	});
