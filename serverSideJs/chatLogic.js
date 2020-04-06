@@ -89,7 +89,7 @@ function fromBrowser_ImYourBrowser(){
 }
 
 function fromBrowser_CreateRoom(newRoomName){
-	console.log("HIIIII");
+	console.log("Creating a room with name", newRoomName);
 	let options = {
 		url: supernodeEndPoint + "/chatrooms/create",
 		method: 'POST',
