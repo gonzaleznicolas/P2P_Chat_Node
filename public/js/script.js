@@ -1,14 +1,9 @@
 var userName;
 let nodeId;
 let socket;
-<<<<<<< HEAD
 let $loginPage = $("#login");
 let $usernameInput =  $('#usernameInput'); 
 let $inputMessage = $('#inputMessage');
-=======
-var $inputMessage = $('.inputMessage'); // this is the input message from the input html element
-let myUserId;
->>>>>>> master
 
 $(function () {
 
@@ -18,12 +13,7 @@ $(function () {
 
 	socket.on('FromServer_OrderedUpdate', fromServer_OrderedUpdate);
 	socket.on('FromServer_ChatLog', fromServer_ChatLog);
-<<<<<<< HEAD
 	socket.on('FromServer_ImYourServer', fromServer_ImYourServer);
-=======
-	socket.on('FromServer_AvailableRooms', fromServer_AvailableRooms);
-	socket.on('FromServer_ThisIsMyUserId', fromServer_ThisIsMyUserId);
->>>>>>> master
 	$("#leaveRoomButton").click( onLeaveRoom );
 	$("#addNewChatroomButton").click( onAddNewRoom );
 
@@ -40,10 +30,6 @@ $(function () {
 			}
 		}
 	});
-<<<<<<< HEAD
-
-=======
->>>>>>> master
 });
 
 function connectToRoom(chatID){
