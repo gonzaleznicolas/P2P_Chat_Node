@@ -10,6 +10,11 @@
     margin-bottom: 20px;
     }
 
+  h2{
+    text-align: center;
+    color: white;
+  }
+
   /*--- navigation bar ---*/
   .navbar {
     background:#6d46b4;
