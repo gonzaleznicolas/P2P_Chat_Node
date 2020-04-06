@@ -388,8 +388,9 @@ function tobApplyUpdates(){
 		Q.dequeue();
 		console.log(new Date().getTime(), "APPLYING UPDATE:");
 		console.log(new Date().getTime(), update);
-		chatLog.push({userId: update.fromIdentifier, username: update.fromUser, message: update.message});
-		socketToBrowser.emit('FromServer_OrderedUpdate', update);
+		let chatLogMsg = {userId: update.fromIdentifier, username: update.fromUser, message: update.message};
+		chatLog.push(chatLogMsg);
+		socketToBrowser.emit('FromServer_OrderedUpdate', chatLogMsg);
 	}
 
 }
