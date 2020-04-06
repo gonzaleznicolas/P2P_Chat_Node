@@ -471,7 +471,6 @@ function getChatRooms(){
 
 	request(options, (err, res, body) => {
 		chatRooms = (JSON.parse(body)).rooms;
-		//console.log("Available Rooms:\n", chatRooms);
 	});
 }
 
