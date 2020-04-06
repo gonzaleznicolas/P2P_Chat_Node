@@ -167,16 +167,22 @@ function fromBrowser_LeaveRoom(){
 	});
 	serversImConnectedTo.clear();
 
+	// send chat log to super node
+	sendLogToServer(joinedRooms[0]);
+
+	// reset some data structures
 	chatLog = [];
 	chatRooms = [];
 	joinedRooms = [];
 	chatMembers = {};
 
-	// initialize TOB time stamp, and connect to self
+	// initialize TOB time stamp, and re-connect to self
 	myTS.time = 0;
 	myTS.serverIdentifier = myIdentifier;
 	connectToSelf();
 
+	// get list of chat rooms because browser is going back to 
+	// landing page with list of chat rooms and will need them
 	getChatRooms();
 }
 
@@ -470,6 +476,8 @@ function sendHeartbeatToServer(){
 }
 
 function sendLogToServer(room){
+	console.log("sending log to server for room "+room)
+
 	const logToSend = chatLog.map((value) => {
 		return {
 			username: value.fromUser,
