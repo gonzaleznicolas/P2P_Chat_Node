@@ -29,6 +29,7 @@ let myTS = {time: 0, serverIdentifier: ""}
 let Q = new PriorityQueue();
 
 let heartbeatSetIntervalObj;
+let sendBrowserListOfRoomsIntervalObj;
 
 function initialize (IO_SERVER, IO_CLIENT, portImRunningOn){
 
@@ -53,7 +54,8 @@ function initialize (IO_SERVER, IO_CLIENT, portImRunningOn){
 	// start checking for TOB updates regularly
 	setInterval( tobApplyUpdates, 500);
 
-	getChatRooms();
+	// regularly update my list of available rooms
+	setInterval(() => getChatRooms(), 1000);
 }
 
 function ioServerOnConnection(socketToClient){
@@ -83,8 +85,18 @@ FROM BROWSER EVENT HANDLERS
 ********************************************************/ 
 
 function fromBrowser_ImYourBrowser(){
+	console.log(new Date().getTime(), "Browser has connected. Start sending it list of room updates.");
+
 	socketToBrowser = this; // save the socket to the browser so I can send messages at any time
-	console.log(new Date().getTime(), "Browser has connected.")
+
+	// regularly update the browser's list of available rooms
+	sendBrowserListOfRoomsIntervalObj = setInterval(()=>{socketToBrowser.emit('FromServer_AvailableRooms', chatRooms);}, 1000);
+
+	socketToBrowser.on("disconnect", function(){
+		console.log(new Date().getTime(), "Browser disconnected. Stop sending it available rooms.");
+		clearInterval(sendBrowserListOfRoomsIntervalObj);
+	});
+
 	socketToBrowser.emit('FromServer_AvailableRooms', chatRooms);
 	socketToBrowser.emit('FromServer_ThisIsMyUserDetails', {userId: myIdentifier, username: myUserName});
 }
@@ -468,7 +480,6 @@ function getIPAddressOfThisMachine(){
 }
 
 function getChatRooms(){
-	console.log("GOT HERE")
 	let options = {
 		url: supernodeEndPoint + "/chatrooms",
 		method: 'GET',
@@ -487,8 +498,6 @@ function getChatRooms(){
 			}
 			chatRooms = []
 		}
-
-		console.log("Available Rooms:\n", chatRooms);
 	});
 }
 
