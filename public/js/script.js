@@ -1,9 +1,6 @@
-var userName;
-let nodeId;
 let socket;
-let $loginPage = $("#login");
-let $usernameInput =  $('#usernameInput'); 
-let $inputMessage = $('#inputMessage');
+var $inputMessage = $('.inputMessage'); // this is the input message from the input html element
+let myUserId;
 
 $(function () {
 
@@ -13,21 +10,21 @@ $(function () {
 
 	socket.on('FromServer_OrderedUpdate', fromServer_OrderedUpdate);
 	socket.on('FromServer_ChatLog', fromServer_ChatLog);
-	socket.on('FromServer_ImYourServer', fromServer_ImYourServer);
+	socket.on('FromServer_AvailableRooms', fromServer_AvailableRooms);
+	socket.on('FromServer_ThisIsMyUserDetails', fromServer_ThisIsMyUserDetails);
 	$("#leaveRoomButton").click( onLeaveRoom );
 	$("#addNewChatroomButton").click( onAddNewRoom );
+	$("#submitUsernameButton").click( onSubmitUsername );
+
+	socket.emit('FromBrowser_ImYourBrowser');
 
 	// listening in on key-board events
 	$window.keydown(event => {
 		// when a client node hits the "ENTER" key on their keyboard (so no enter button)
 		if (event.which === 13) { // if enter
-			if (userName) {
-				var message = $inputMessage.val(); // grab value
-				$inputMessage.val(''); // clear the inputmessage element
-				giveUpdate(message); // call tob func
-			} else {
-				setUserName();
-			}
+			var message = $inputMessage.val(); // grab value
+			$inputMessage.val(''); // clear the inputmessage element
+			giveUpdate(message); // call tob func
 		}
 	});
 });
@@ -79,27 +76,7 @@ function fromServer_ChatLog(chatLog){
 	})
 }
 
-function setUserName() {
-	console.log("Setting User Name");
-	userName = cleanInput($usernameInput.val().trim());
-
-    // If the username is valid
-    if (userName) {
-	  // Tell the server your username
-	  $loginPage.empty();
-	  $loginPage.hide();
-	  socket.emit('FromBrowser_ImYourBrowser', {userName: userName});
-    }
-}
-
-function cleanInput (input) {
-    return $('<div/>').text(input).html();
-}
-
-function fromServer_ImYourServer(obj){
-	let chatRooms = obj.chatRooms;
-	nodeId = obj.nodeId;
-	console.log("node ID: ",nodeId);
+function fromServer_AvailableRooms(chatRooms){
 	$("#existingRooms").empty();
 	chatRooms.forEach( function (room) {
 		let roomElement = $('<div class="btn btn-dark btn-lg btn-block"></div>');
@@ -114,8 +91,9 @@ function fromServer_ImYourServer(obj){
 	console.log(chatRooms);
 }
 
-function fromServer_ThisIsMyUserId(id){
-	myUserId = id;
+function fromServer_ThisIsMyUserDetails(obj){
+	myUserId = obj.userId;
+	$("#usernameInput").val(obj.username);
 	console.log("this is my myUserId", myUserId);
 }
 
@@ -132,9 +110,15 @@ function onLeaveRoom(){
 }
 
 function onAddNewRoom(){
-	console.log("hi");
 	let newRoomName = $("#newChatroomName").val();
 	socket.emit('FromBrowser_CreateRoom', newRoomName);
 	$("#newChatroomName").val('');
 	setTimeout(() => location.reload(), 1000);
+}
+
+function onSubmitUsername(){
+	let newUsername = $("#usernameInput").val();
+	socket.emit('FromBrowser_UpdateUsername', newUsername);
+	$("#usernameInput").val(newUsername);
+	$("#usernameInput").css("background-color", "lightgreen");
 }
