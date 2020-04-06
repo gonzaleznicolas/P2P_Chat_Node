@@ -6,6 +6,7 @@ $(function () {
 	socket.on('FromServer_OrderedUpdate', fromServer_OrderedUpdate);
 	socket.on('FromServer_ChatLog', fromServer_ChatLog);
 	socket.on('FromServer_AvailableRooms', fromServer_AvailableRooms);
+	$("#leaveRoomButton").click( onLeaveRoom );
 
 	socket.emit('FromBrowser_ImYourBrowser');
 
@@ -61,4 +62,8 @@ function changeToChatScreen(){
 	$("#selectRoom").empty();
 	$("#selectRoom").hide();
 	$("#chat").show();
+}
+
+function onLeaveRoom(){
+	socket.emit("FromBrowser_LeaveRoom");
 }
