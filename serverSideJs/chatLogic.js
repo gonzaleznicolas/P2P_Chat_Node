@@ -424,7 +424,7 @@ function sendHeartbeatToServer(){
 			}
 			else {
 				// Log error coming from server
-				console.log(res.body)
+				console.error(res.body)
 			}
 		});
 	});
@@ -452,6 +452,13 @@ function sendLogToServer(room){
 	request(options, (err, res, obj) => {
 		if (!Object.keys(obj).length) {
 			console.log("Heartbeat not received");
+		}
+		else if (res.body === 'Message log received') {
+			// Ignore
+		}
+		else {
+			// Log error coming from server
+			console.error(res.body)
 		}
 	});
 }
