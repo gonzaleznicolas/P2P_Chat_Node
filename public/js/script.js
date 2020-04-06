@@ -13,6 +13,7 @@ $(function () {
 	socket.on('FromServer_AvailableRooms', fromServer_AvailableRooms);
 	socket.on('FromServer_ThisIsMyUserId', fromServer_ThisIsMyUserId);
 	$("#leaveRoomButton").click( onLeaveRoom );
+	$("#addNewChatroomButton").click( onAddNewRoom );
 
 	socket.emit('FromBrowser_ImYourBrowser');
 
@@ -25,18 +26,6 @@ $(function () {
 			giveUpdate(message); // call tob func
 		}
 	});
-
-	// for adding a new chatroom
-	$("#addNewChatroomButton").click(() => {
-
-		//----placeholder logic----
-		console.log("New Room is " + $("#newChatroomName").val());
-		//----placeholder logic----
-
-		$("#newChatroomName").val('');
-	});
-
-
 });
 
 function connectToRoom(chatID){
@@ -115,5 +104,13 @@ function changeToChatScreen(){
 
 function onLeaveRoom(){
 	socket.emit("FromBrowser_LeaveRoom");
+	setTimeout(() => location.reload(), 1000);
+}
+
+function onAddNewRoom(){
+	console.log("hi");
+	let newRoomName = $("#newChatroomName").val();
+	socket.emit('FromBrowser_CreateRoom', newRoomName);
+	$("#newChatroomName").val('');
 	setTimeout(() => location.reload(), 1000);
 }

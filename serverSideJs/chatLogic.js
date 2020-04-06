@@ -66,6 +66,7 @@ function ioServerOnConnection(socketToClient){
 	socketToClient.on('FromBrowser_GiveTobUpdate', fromBrowser_GiveTobUpdate);
 	socketToClient.on('FromBrowser_SendMessageToSpecificServer', fromBrowser_SendMessageToSpecificServer);
 	socketToClient.on('FromBrowser_LeaveRoom', fromBrowser_LeaveRoom);
+	socketToClient.on('FromBrowser_CreateRoom', fromBrowser_CreateRoom);
 
 	socketToClient.on('FromOtherServer_iJustConnectedToYou', fromOtherServer_iJustConnectedToYou);
 	socketToClient.on('FromOtherServer_TobMessageOrAck', fromOtherServer_TobMessageOrAck)
@@ -85,6 +86,19 @@ function fromBrowser_ImYourBrowser(){
 	console.log(new Date().getTime(), "Browser has connected.")
 	socketToBrowser.emit('FromServer_AvailableRooms', chatRooms);
 	socketToBrowser.emit('FromServer_ThisIsMyUserId', myIdentifier);
+}
+
+function fromBrowser_CreateRoom(newRoomName){
+	console.log("HIIIII");
+	let options = {
+		url: supernodeEndPoint + "/chatrooms/create",
+		method: 'POST',
+		json: {name: newRoomName}
+	};
+
+	request(options, (err, res, obj) => {
+		getChatRooms(); // update my list of available chat rooms now that i created one
+	});
 }
 
 function fromBrowser_ConnectToRoom(obj){
