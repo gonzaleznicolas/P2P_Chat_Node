@@ -67,4 +67,5 @@ function changeToChatScreen(){
 
 function onLeaveRoom(){
 	socket.emit("FromBrowser_LeaveRoom");
+	setTimeout(() => location.reload(), 1000);
 }

@@ -161,7 +161,25 @@ function fromBrowser_SendMessageToSpecificServer(obj /* {toIp, toPort, toIdentif
 }
 
 function fromBrowser_LeaveRoom(){
-	clearInterval(heartbeatSetIntervalObj);
+	clearInterval(heartbeatSetIntervalObj); // stop sending heartbeats
+
+	// disconnect anyone connected to my server socket
+	getSocketsConnectedToServerSocket().forEach(function(s) {
+		s.disconnect(true);
+	});
+
+	// disconnect from all the servers I am connected to as a client
+	serversImConnectedTo.forEach( function (server) {
+		server.socket.close();
+	});
+	serversImConnectedTo.clear();
+
+	chatLog = [];
+	chatRooms = [];
+	joinedRooms = [];
+	chatMembers = {};
+
+	initialize(ioServer, ioClient, myPort);
 }
 
 /********************************************************
@@ -356,6 +374,10 @@ function tobApplyUpdates(){
  HELPER FUNCTIONS
 ********************************************************/ 
 
+function getSocketsConnectedToServerSocket() {
+    return Object.values(ioServer.of("/").connected);
+}
+
 function printListOfServersImConnectedTo(){
 	console.log(new Date().getTime(), "My connections:");
 	let it = serversImConnectedTo.keys();
@@ -405,7 +427,6 @@ function getIPAddressOfThisMachine(){
 }
 
 function sendHeartbeatToServer(){
-	console.log("hb");
 	joinedRooms.forEach((room) => {
 		let data = {
 			userId: myTS.serverIdentifier,
