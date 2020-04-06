@@ -3,7 +3,7 @@ let nodeId;
 let socket;
 let $loginPage = $("#login");
 let $usernameInput =  $('#usernameInput'); 
-// var $inputMessage = $('.inputMessage');
+let $inputMessage = $('#inputMessage');
 
 $(function () {
 
@@ -99,7 +99,7 @@ function cleanInput (input) {
 function fromServer_ImYourServer(obj){
 	let chatRooms = obj.chatRooms;
 	nodeId = obj.nodeId;
-	console.log(nodeId);
+	console.log("node ID: ",nodeId);
 	$("#existingRooms").empty();
 	chatRooms.forEach( function (room) {
 		let roomElement = $('<div class="btn btn-dark btn-lg btn-block"></div>');

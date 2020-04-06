@@ -33,7 +33,6 @@ let heartbeatSetIntervalObj;
 function initialize (IO_SERVER, IO_CLIENT, portImRunningOn){
 
 	myIdentifier = short_uuid().new();
-	myUserName = short_uuid().new();
 
 	myIP = getIPAddressOfThisMachine();
 	console.log(new Date().getTime(), "myIP: " + myIP);
@@ -57,7 +56,13 @@ function initialize (IO_SERVER, IO_CLIENT, portImRunningOn){
 }
 
 function ioServerOnConnection(socketToClient){
-	console.log(new Date().getTime(), 'Someone connected');
+	console.log(new Date().getTime(), 'Browser has connected');
+	socketToBrowser = this; // save the socket to the browser so I can send messages at any time
+
+	socketToBrowser.emit('FromServer_ImYourServer', {
+		chatRooms: chatRooms,
+		nodeId: myIdentifier,
+	});
 
 	socketToClient.on('disconnect', fromEither_Disconnect);
 
@@ -81,13 +86,8 @@ FROM BROWSER EVENT HANDLERS
 ********************************************************/ 
 
 function fromBrowser_ImYourBrowser(obj){
-	myUserName = obj.nickName;
-	socketToBrowser = this; // save the socket to the browser so I can send messages at any time
-	console.log(new Date().getTime(), "Browser has connected.")
-	socketToBrowser.emit('FromServer_ImYourServer', {
-		chatRooms: chatRooms,
-		nodeId: myIdentifier,
-	});
+	myUserName = obj.userName;
+	console.log("Username: ", myUserName)
 }
 
 function fromBrowser_ConnectToRoom(obj){
