@@ -84,7 +84,10 @@ FROM BROWSER EVENT HANDLERS
 
 function fromBrowser_ImYourBrowser(){
 	socketToBrowser = this; // save the socket to the browser so I can send messages at any time
-	console.log(new Date().getTime(), "Browser has connected.")
+	socketToBrowser.on("disconnect", function(){
+		console.log("browser disconnected");
+	});
+	console.log(new Date().getTime(), "Browser has connected.");
 	socketToBrowser.emit('FromServer_AvailableRooms', chatRooms);
 	socketToBrowser.emit('FromServer_ThisIsMyUserDetails', {userId: myIdentifier, username: myUserName});
 }
