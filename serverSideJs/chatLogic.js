@@ -53,16 +53,7 @@ function initialize (IO_SERVER, IO_CLIENT, portImRunningOn){
 	// start checking for TOB updates regularly
 	setInterval( tobApplyUpdates, 500);
 
-	// get chatrooms from the server
-	let options = {
-		url: supernodeEndPoint + "/chatrooms",
-		method: 'GET',
-	};
-
-	request(options, (err, res, body) => {
-		chatRooms = (JSON.parse(body)).rooms;
-		console.log("Available Rooms:\n", chatRooms);
-	});
+	getChatRooms();
 }
 
 function ioServerOnConnection(socketToClient){
@@ -161,6 +152,8 @@ function fromBrowser_SendMessageToSpecificServer(obj /* {toIp, toPort, toIdentif
 }
 
 function fromBrowser_LeaveRoom(){
+	console.log(new Date().getTime(), "Leaving room. Disconnecting from everyone.");
+
 	clearInterval(heartbeatSetIntervalObj); // stop sending heartbeats
 
 	// disconnect anyone connected to my server socket
@@ -179,7 +172,12 @@ function fromBrowser_LeaveRoom(){
 	joinedRooms = [];
 	chatMembers = {};
 
-	initialize(ioServer, ioClient, myPort);
+	// initialize TOB time stamp, and connect to self
+	myTS.time = 0;
+	myTS.serverIdentifier = myIdentifier;
+	connectToSelf();
+
+	getChatRooms();
 }
 
 /********************************************************
@@ -424,6 +422,18 @@ function getIPAddressOfThisMachine(){
 		});
 	});
 	return ip;
+}
+
+function getChatRooms(){
+	let options = {
+		url: supernodeEndPoint + "/chatrooms",
+		method: 'GET',
+	};
+
+	request(options, (err, res, body) => {
+		chatRooms = (JSON.parse(body)).rooms;
+		console.log("Available Rooms:\n", chatRooms);
+	});
 }
 
 function sendHeartbeatToServer(){
