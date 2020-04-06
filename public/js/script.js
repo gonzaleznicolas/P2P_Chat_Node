@@ -48,7 +48,7 @@ function fromServer_OrderedUpdate(update){
 			<div class="outgoing_msg">
 				<div class="sent_msg">
 					<p><b>&nbsp ${update.fromUser}</b>&nbsp ${update.message}</p>
-				</div> 
+				</div>
 			</div>
 		`);
 	// like so;
@@ -68,7 +68,7 @@ function fromServer_ChatLog(chatLog){
 			<div class="incoming_msg">
 				<div class="received_withd_msg">
 					<p><b>Nico</b>&nbsp ${msgObject.message}</p>
-				</div> 
+				</div>
 			</div>
 		`);
 	})
@@ -77,7 +77,7 @@ function fromServer_ChatLog(chatLog){
 function fromServer_AvailableRooms(chatRooms){
 	$("#existingRooms").empty();
 	chatRooms.forEach( function (room) {
-		let roomElement = $("<div></div>");
+		let roomElement = $('<div class="btn btn-dark btn-lg btn-block"></div>');
 		roomElement.text(room.chatRoomName);
 		roomElement.click(function(){
 			console.log("connecting to room "+ room.chatRoomName);
