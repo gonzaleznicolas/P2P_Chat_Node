@@ -99,6 +99,7 @@ function fromServer_AvailableRooms(chatRooms){
 		roomElement.click(function(){
 			console.log("connecting to room "+ room.chatRoomName);
 			connectToRoom(room.chatRoomId);
+			$("#chatTitle").text(room.chatRoomName);
 			changeToChatScreen();
 		});
 		$("#existingRooms").append(roomElement);
