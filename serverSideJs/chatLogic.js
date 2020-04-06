@@ -71,6 +71,7 @@ function ioServerOnConnection(socketToClient){
 	socketToClient.on('FromBrowser_GiveTobUpdate', fromBrowser_GiveTobUpdate);
 	socketToClient.on('FromBrowser_SendMessageToSpecificServer', fromBrowser_SendMessageToSpecificServer);
 	socketToClient.on('FromBrowser_LeaveRoom', fromBrowser_LeaveRoom);
+	socketToClient.on('FromBrowser_CreateRoom', fromBrowser_CreateRoom);
 
 	socketToClient.on('FromOtherServer_iJustConnectedToYou', fromOtherServer_iJustConnectedToYou);
 	socketToClient.on('FromOtherServer_TobMessageOrAck', fromOtherServer_TobMessageOrAck)
@@ -88,6 +89,18 @@ FROM BROWSER EVENT HANDLERS
 function fromBrowser_ImYourBrowser(obj){
 	myUserName = obj.userName;
 	console.log("Username: ", myUserName)
+
+function fromBrowser_CreateRoom(newRoomName){
+	console.log("Creating a room with name", newRoomName);
+	let options = {
+		url: supernodeEndPoint + "/chatrooms/create",
+		method: 'POST',
+		json: {name: newRoomName}
+	};
+
+	request(options, (err, res, obj) => {
+		getChatRooms(); // update my list of available chat rooms now that i created one
+	});
 }
 
 function fromBrowser_ConnectToRoom(obj){
@@ -372,7 +385,7 @@ function tobApplyUpdates(){
 		Q.dequeue();
 		console.log(new Date().getTime(), "APPLYING UPDATE:");
 		console.log(new Date().getTime(), update);
-		chatLog.push(update);
+		chatLog.push({userId: update.fromIdentifier, username: update.fromUser, message: update.message});
 		socketToBrowser.emit('FromServer_OrderedUpdate', update);
 	}
 
@@ -484,7 +497,8 @@ function sendLogToServer(room){
 
 	const logToSend = chatLog.map((value) => {
 		return {
-			username: value.fromUser,
+			userId: value.userId,
+			username: value.username,
 			message: value.message
 		}
 	});
