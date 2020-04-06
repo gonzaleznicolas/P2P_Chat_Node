@@ -28,6 +28,8 @@ let serversImConnectedTo = new Map();
 let myTS = {time: 0, serverIdentifier: ""}
 let Q = new PriorityQueue();
 
+let heartbeatSetIntervalObj;
+
 function initialize (IO_SERVER, IO_CLIENT, portImRunningOn){
 
 	myIdentifier = short_uuid().new();
@@ -51,16 +53,7 @@ function initialize (IO_SERVER, IO_CLIENT, portImRunningOn){
 	// start checking for TOB updates regularly
 	setInterval( tobApplyUpdates, 500);
 
-	// get chatrooms from the server
-	let options = {
-		url: supernodeEndPoint + "/chatrooms",
-		method: 'GET',
-	};
-
-	request(options, (err, res, body) => {
-		chatRooms = (JSON.parse(body)).rooms;
-		console.log("Available Rooms:\n", chatRooms);
-	});
+	getChatRooms();
 }
 
 function ioServerOnConnection(socketToClient){
@@ -72,6 +65,7 @@ function ioServerOnConnection(socketToClient){
 	socketToClient.on('FromBrowser_ConnectToRoom', fromBrowser_ConnectToRoom);
 	socketToClient.on('FromBrowser_GiveTobUpdate', fromBrowser_GiveTobUpdate);
 	socketToClient.on('FromBrowser_SendMessageToSpecificServer', fromBrowser_SendMessageToSpecificServer);
+	socketToClient.on('FromBrowser_LeaveRoom', fromBrowser_LeaveRoom);
 
 	socketToClient.on('FromOtherServer_iJustConnectedToYou', fromOtherServer_iJustConnectedToYou);
 	socketToClient.on('FromOtherServer_TobMessageOrAck', fromOtherServer_TobMessageOrAck)
@@ -117,7 +111,7 @@ function fromBrowser_ConnectToRoom(obj){
 					connectAsClientToServer(member.ip, member.port, member.userId);
 					joinedRooms.push(chatID)
 					// start sending heartbeats to the server
-					setInterval( sendHeartbeatToServer, 2000);
+					heartbeatSetIntervalObj = setInterval( sendHeartbeatToServer, 2000);
 					return;
 				}
 			}
@@ -130,7 +124,7 @@ function fromBrowser_ConnectToRoom(obj){
 			socketToBrowser.emit('FromServer_ChatLog', chatLog);
 			joinedRooms.push(chatID)
 			// start sending heartbeats to the server
-			setInterval( sendHeartbeatToServer, 2000);
+			heartbeatSetIntervalObj = setInterval( sendHeartbeatToServer, 2000);
 			}
 	});
 }
@@ -155,6 +149,41 @@ function fromBrowser_SendMessageToSpecificServer(obj /* {toIp, toPort, toIdentif
 		fromUser: myUserName,
 		msg: obj.msg
 	});
+}
+
+function fromBrowser_LeaveRoom(){
+	console.log(new Date().getTime(), "Leaving room. Disconnecting from everyone.");
+
+	clearInterval(heartbeatSetIntervalObj); // stop sending heartbeats
+
+	// disconnect anyone connected to my server socket
+	getSocketsConnectedToServerSocket().forEach(function(s) {
+		s.disconnect(true);
+	});
+
+	// disconnect from all the servers I am connected to as a client
+	serversImConnectedTo.forEach( function (server) {
+		server.socket.close();
+	});
+	serversImConnectedTo.clear();
+
+	// send chat log to super node
+	sendLogToServer(joinedRooms[0]);
+
+	// reset some data structures
+	chatLog = [];
+	chatRooms = [];
+	joinedRooms = [];
+	chatMembers = {};
+
+	// initialize TOB time stamp, and re-connect to self
+	myTS.time = 0;
+	myTS.serverIdentifier = myIdentifier;
+	connectToSelf();
+
+	// get list of chat rooms because browser is going back to 
+	// landing page with list of chat rooms and will need them
+	getChatRooms();
 }
 
 /********************************************************
@@ -349,6 +378,10 @@ function tobApplyUpdates(){
  HELPER FUNCTIONS
 ********************************************************/ 
 
+function getSocketsConnectedToServerSocket() {
+    return Object.values(ioServer.of("/").connected);
+}
+
 function printListOfServersImConnectedTo(){
 	console.log(new Date().getTime(), "My connections:");
 	let it = serversImConnectedTo.keys();
@@ -397,6 +430,18 @@ function getIPAddressOfThisMachine(){
 	return ip;
 }
 
+function getChatRooms(){
+	let options = {
+		url: supernodeEndPoint + "/chatrooms",
+		method: 'GET',
+	};
+
+	request(options, (err, res, body) => {
+		chatRooms = (JSON.parse(body)).rooms;
+		console.log("Available Rooms:\n", chatRooms);
+	});
+}
+
 function sendHeartbeatToServer(){
 	joinedRooms.forEach((room) => {
 		let data = {
@@ -431,6 +476,8 @@ function sendHeartbeatToServer(){
 }
 
 function sendLogToServer(room){
+	console.log("sending log to server for room "+room)
+
 	const logToSend = chatLog.map((value) => {
 		return {
 			username: value.fromUser,

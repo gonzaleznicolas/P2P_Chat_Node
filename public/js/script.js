@@ -10,6 +10,8 @@ $(function () {
 	socket.on('FromServer_OrderedUpdate', fromServer_OrderedUpdate);
 	socket.on('FromServer_ChatLog', fromServer_ChatLog);
 	socket.on('FromServer_AvailableRooms', fromServer_AvailableRooms);
+	$("#leaveRoomButton").click( onLeaveRoom );
+
 	socket.emit('FromBrowser_ImYourBrowser');
 
 	// listening in on key-board events
@@ -90,5 +92,11 @@ function fromServer_AvailableRooms(chatRooms){
 function changeToChatScreen(){
 	$("#selectRoom").empty();
 	$("#selectRoom").hide();
+	$("#leaveRoomButton").show();
 	$("#chat").show();
+}
+
+function onLeaveRoom(){
+	socket.emit("FromBrowser_LeaveRoom");
+	setTimeout(() => location.reload(), 1000);
 }
