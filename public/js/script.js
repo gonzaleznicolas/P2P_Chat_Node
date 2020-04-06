@@ -1,5 +1,6 @@
 let socket;
 var $inputMessage = $('.inputMessage'); // this is the input message from the input html element
+let myUserId;
 
 $(function () {
 
@@ -10,6 +11,7 @@ $(function () {
 	socket.on('FromServer_OrderedUpdate', fromServer_OrderedUpdate);
 	socket.on('FromServer_ChatLog', fromServer_ChatLog);
 	socket.on('FromServer_AvailableRooms', fromServer_AvailableRooms);
+	socket.on('FromServer_ThisIsMyUserId', fromServer_ThisIsMyUserId);
 	$("#leaveRoomButton").click( onLeaveRoom );
 
 	socket.emit('FromBrowser_ImYourBrowser');
@@ -97,6 +99,11 @@ function fromServer_AvailableRooms(chatRooms){
 		$("#existingRooms").append(roomElement);
 	})
 	console.log(chatRooms);
+}
+
+function fromServer_ThisIsMyUserId(id){
+	myUserId = id;
+	console.log("this is my myUserId", myUserId);
 }
 
 function changeToChatScreen(){

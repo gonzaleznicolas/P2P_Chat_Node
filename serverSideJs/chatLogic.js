@@ -33,7 +33,7 @@ let heartbeatSetIntervalObj;
 function initialize (IO_SERVER, IO_CLIENT, portImRunningOn){
 
 	myIdentifier = short_uuid().new();
-	myUserName = short_uuid().new();
+	myUserName = myIdentifier;
 
 	myIP = getIPAddressOfThisMachine();
 	console.log(new Date().getTime(), "myIP: " + myIP);
@@ -84,6 +84,7 @@ function fromBrowser_ImYourBrowser(){
 	socketToBrowser = this; // save the socket to the browser so I can send messages at any time
 	console.log(new Date().getTime(), "Browser has connected.")
 	socketToBrowser.emit('FromServer_AvailableRooms', chatRooms);
+	socketToBrowser.emit('FromServer_ThisIsMyUserId', myIdentifier);
 }
 
 function fromBrowser_ConnectToRoom(obj){
