@@ -111,11 +111,7 @@ function fromBrowser_ConnectToRoom(obj){
 
 	request(options, (err, res, obj) => {
 		chatMembers[chatID] = obj.members;
-		chatLog = obj.log;
-		socketToBrowser.emit('FromServer_ChatLog', chatLog);
-		console.log("chat history sent to me by server:", chatLog);
 		if (Array.isArray(chatMembers[chatID]) && chatMembers[chatID].length) {
-
 			for (const member of chatMembers[chatID]) {
 				if (member.userId != myIdentifier && (member.ip != myIP || member.port != myPort)) {
 					connectAsClientToServer(member.ip, member.port, member.userId);
@@ -129,6 +125,9 @@ function fromBrowser_ConnectToRoom(obj){
 		} else {
 			// No action if the chat room is empty
 			console.log(`Become the first member of room ${chatID}`)
+			chatLog = obj.log;
+			console.log("chat history sent to me by server:", chatLog);
+			socketToBrowser.emit('FromServer_ChatLog', chatLog);
 			joinedRooms.push(chatID)
 			// start sending heartbeats to the server
 			setInterval( sendHeartbeatToServer, 2000);
