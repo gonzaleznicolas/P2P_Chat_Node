@@ -77,6 +77,10 @@ body {
 	display: none;
 }
 
+#leaveRoomButton{
+	display: none;
+}
+
 /* -- chat -- */
 
 .container{max-width:1170px; margin:auto;}

@@ -61,6 +61,7 @@ function fromServer_AvailableRooms(chatRooms){
 function changeToChatScreen(){
 	$("#selectRoom").empty();
 	$("#selectRoom").hide();
+	$("#leaveRoomButton").show();
 	$("#chat").show();
 }
 

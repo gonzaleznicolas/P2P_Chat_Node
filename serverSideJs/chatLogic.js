@@ -28,6 +28,8 @@ let serversImConnectedTo = new Map();
 let myTS = {time: 0, serverIdentifier: ""}
 let Q = new PriorityQueue();
 
+let heartbeatSetIntervalObj;
+
 function initialize (IO_SERVER, IO_CLIENT, portImRunningOn){
 
 	myIdentifier = short_uuid().new();
@@ -72,6 +74,7 @@ function ioServerOnConnection(socketToClient){
 	socketToClient.on('FromBrowser_ConnectToRoom', fromBrowser_ConnectToRoom);
 	socketToClient.on('FromBrowser_GiveTobUpdate', fromBrowser_GiveTobUpdate);
 	socketToClient.on('FromBrowser_SendMessageToSpecificServer', fromBrowser_SendMessageToSpecificServer);
+	socketToClient.on('FromBrowser_LeaveRoom', fromBrowser_LeaveRoom);
 
 	socketToClient.on('FromOtherServer_iJustConnectedToYou', fromOtherServer_iJustConnectedToYou);
 	socketToClient.on('FromOtherServer_TobMessageOrAck', fromOtherServer_TobMessageOrAck)
@@ -117,7 +120,7 @@ function fromBrowser_ConnectToRoom(obj){
 					connectAsClientToServer(member.ip, member.port, member.userId);
 					joinedRooms.push(chatID)
 					// start sending heartbeats to the server
-					setInterval( sendHeartbeatToServer, 2000);
+					heartbeatSetIntervalObj = setInterval( sendHeartbeatToServer, 2000);
 					return;
 				}
 			}
@@ -130,7 +133,7 @@ function fromBrowser_ConnectToRoom(obj){
 			socketToBrowser.emit('FromServer_ChatLog', chatLog);
 			joinedRooms.push(chatID)
 			// start sending heartbeats to the server
-			setInterval( sendHeartbeatToServer, 2000);
+			heartbeatSetIntervalObj = setInterval( sendHeartbeatToServer, 2000);
 			}
 	});
 }
@@ -155,6 +158,10 @@ function fromBrowser_SendMessageToSpecificServer(obj /* {toIp, toPort, toIdentif
 		fromUser: myUserName,
 		msg: obj.msg
 	});
+}
+
+function fromBrowser_LeaveRoom(){
+	clearInterval(heartbeatSetIntervalObj);
 }
 
 /********************************************************
@@ -398,6 +405,7 @@ function getIPAddressOfThisMachine(){
 }
 
 function sendHeartbeatToServer(){
+	console.log("hb");
 	joinedRooms.forEach((room) => {
 		let data = {
 			userId: myTS.serverIdentifier,
