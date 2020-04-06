@@ -33,6 +33,7 @@ let heartbeatSetIntervalObj;
 function initialize (IO_SERVER, IO_CLIENT, portImRunningOn){
 
 	myIdentifier = short_uuid().new();
+	myUserName = "Anonymous";
 
 	myIP = getIPAddressOfThisMachine();
 	console.log(new Date().getTime(), "myIP: " + myIP);
@@ -56,13 +57,7 @@ function initialize (IO_SERVER, IO_CLIENT, portImRunningOn){
 }
 
 function ioServerOnConnection(socketToClient){
-	console.log(new Date().getTime(), 'Browser has connected');
-	socketToBrowser = this; // save the socket to the browser so I can send messages at any time
-
-	socketToBrowser.emit('FromServer_ImYourServer', {
-		chatRooms: chatRooms,
-		nodeId: myIdentifier,
-	});
+	console.log(new Date().getTime(), 'Someone connected');
 
 	socketToClient.on('disconnect', fromEither_Disconnect);
 
@@ -72,6 +67,7 @@ function ioServerOnConnection(socketToClient){
 	socketToClient.on('FromBrowser_SendMessageToSpecificServer', fromBrowser_SendMessageToSpecificServer);
 	socketToClient.on('FromBrowser_LeaveRoom', fromBrowser_LeaveRoom);
 	socketToClient.on('FromBrowser_CreateRoom', fromBrowser_CreateRoom);
+	socketToClient.on('FromBrowser_UpdateUsername', fromBrowser_UpdateUsername);
 
 	socketToClient.on('FromOtherServer_iJustConnectedToYou', fromOtherServer_iJustConnectedToYou);
 	socketToClient.on('FromOtherServer_TobMessageOrAck', fromOtherServer_TobMessageOrAck)
@@ -86,9 +82,11 @@ function fromEither_Disconnect(){
 FROM BROWSER EVENT HANDLERS
 ********************************************************/ 
 
-function fromBrowser_ImYourBrowser(obj) {
-	myUserName = obj.userName;
-	console.log("Username: ", myUserName)
+function fromBrowser_ImYourBrowser(){
+	socketToBrowser = this; // save the socket to the browser so I can send messages at any time
+	console.log(new Date().getTime(), "Browser has connected.")
+	socketToBrowser.emit('FromServer_AvailableRooms', chatRooms);
+	socketToBrowser.emit('FromServer_ThisIsMyUserDetails', {userId: myIdentifier, username: myUserName});
 }
 
 function fromBrowser_CreateRoom(newRoomName){
@@ -102,6 +100,10 @@ function fromBrowser_CreateRoom(newRoomName){
 	request(options, (err, res, obj) => {
 		getChatRooms(); // update my list of available chat rooms now that i created one
 	});
+}
+
+function fromBrowser_UpdateUsername(newUsername){
+	myUserName = newUsername;
 }
 
 function fromBrowser_ConnectToRoom(obj){
@@ -386,8 +388,9 @@ function tobApplyUpdates(){
 		Q.dequeue();
 		console.log(new Date().getTime(), "APPLYING UPDATE:");
 		console.log(new Date().getTime(), update);
-		chatLog.push({userId: update.fromIdentifier, username: update.fromUser, message: update.message});
-		socketToBrowser.emit('FromServer_OrderedUpdate', update);
+		let chatLogMsg = {userId: update.fromIdentifier, username: update.fromUser, message: update.message};
+		chatLog.push(chatLogMsg);
+		socketToBrowser.emit('FromServer_OrderedUpdate', chatLogMsg);
 	}
 
 }
@@ -493,7 +496,7 @@ function sendHeartbeatToServer(){
 	});
 }
 
-function sendLogToServer(room) {
+function sendLogToServer(room){
 	console.log("sending log to server for room "+room)
 
 	const logToSend = chatLog.map((value) => {

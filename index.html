@@ -21,22 +21,29 @@
   </nav>
 
   <!-- *** initial select chatroom view *** -->
-  <header id="selectRoom">
-    <h1> Select a Chat Room </h1>
-    <div id="existingRooms">
-      <div>Remove1</div>
-      <div>Remove2</div>
-    </div>
-    <br>
-  </header>
-  <!-- *** end of initial select chatroom view *** -->
-
-  <header id="login">
-    <div class="form">
-      <h3 class="title">What's your nickname?</h3>
-      <input id="usernameInput" type="text" maxlength="14" />
-    </div>
-  </header>
+    <header id="selectRoom">
+      <h1> Enter an optional username </h1>
+      <div class="row justify-content-center">
+        <form class="form-inline">
+          <input id="usernameInput" type="text" class="form-control mb-2 mr-sm-2" placeholder="Anonymous">
+          <button id="submitUsernameButton" type="button" class="btn btn-secondary mb-2">Submit</button>
+        </form>
+      </div>
+      <h1> Select a Chat Room </h1>
+      <div id="existingRooms">
+        <div>Remove1</div>
+        <div>Remove2</div>
+      </div>
+      <h1> Or Add A Chatroom </h1>
+      <div class="row justify-content-center">
+        <form class="form-inline">
+          <input id="newChatroomName" type="text" class="form-control mb-2 mr-sm-2" placeholder="">
+          <button id="addNewChatroomButton" type="button" class="btn btn-secondary mb-2">Add</button>
+        </form>
+      </div>
+      <br>
+    </header>
+    <!-- *** end of initial select chatroom view *** -->
 
   <header id="chat" class="page-header header container-fluid">
     <div class="container">
@@ -64,7 +71,7 @@
             <!-- type a message enter -->
             <div class="type_msg">
               <div class="input_msg_write">
-                <input type="text" id="inputMessage" placeholder="Type a message here..."/>
+                <input type="text" class="inputMessage" placeholder="Type a message here..."/>
               </div>
             </div>
           </div>
