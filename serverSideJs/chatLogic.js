@@ -80,10 +80,14 @@ function fromEither_Disconnect(){
 FROM BROWSER EVENT HANDLERS
 ********************************************************/ 
 
-function fromBrowser_ImYourBrowser(){
+function fromBrowser_ImYourBrowser(obj){
+	myUserName = obj.nickName;
 	socketToBrowser = this; // save the socket to the browser so I can send messages at any time
 	console.log(new Date().getTime(), "Browser has connected.")
-	socketToBrowser.emit('FromServer_AvailableRooms', chatRooms);
+	socketToBrowser.emit('FromServer_ImYourServer', {
+		chatRooms: chatRooms,
+		nodeId: myIdentifier,
+	});
 }
 
 function fromBrowser_ConnectToRoom(obj){

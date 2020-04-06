@@ -1,5 +1,9 @@
+var userName;
+let nodeId;
 let socket;
-var $inputMessage = $('.inputMessage'); // this is the input message from the input html element
+let $loginPage = $("#login");
+let $usernameInput =  $('#usernameInput'); 
+// var $inputMessage = $('.inputMessage');
 
 $(function () {
 
@@ -9,21 +13,22 @@ $(function () {
 
 	socket.on('FromServer_OrderedUpdate', fromServer_OrderedUpdate);
 	socket.on('FromServer_ChatLog', fromServer_ChatLog);
-	socket.on('FromServer_AvailableRooms', fromServer_AvailableRooms);
+	socket.on('FromServer_ImYourServer', fromServer_ImYourServer);
 	$("#leaveRoomButton").click( onLeaveRoom );
-
-	socket.emit('FromBrowser_ImYourBrowser');
 
 	// listening in on key-board events
 	$window.keydown(event => {
 		// when a client node hits the "ENTER" key on their keyboard (so no enter button)
 		if (event.which === 13) { // if enter
-			var message = $inputMessage.val(); // grab value
-			$inputMessage.val(''); // clear the inputmessage element
-			giveUpdate(message); // call tob func
+			if (userName) {
+				var message = $inputMessage.val(); // grab value
+				$inputMessage.val(''); // clear the inputmessage element
+				giveUpdate(message); // call tob func
+			} else {
+				setUserName();
+			}
 		}
 	});
-
 
 });
 
@@ -74,7 +79,27 @@ function fromServer_ChatLog(chatLog){
 	})
 }
 
-function fromServer_AvailableRooms(chatRooms){
+function setUserName() {
+	console.log("Setting User Name");
+	userName = cleanInput($usernameInput.val().trim());
+
+    // If the username is valid
+    if (userName) {
+	  // Tell the server your username
+	  $loginPage.empty();
+	  $loginPage.hide();
+	  socket.emit('FromBrowser_ImYourBrowser', {userName: userName});
+    }
+}
+
+function cleanInput (input) {
+    return $('<div/>').text(input).html();
+}
+
+function fromServer_ImYourServer(obj){
+	let chatRooms = obj.chatRooms;
+	nodeId = obj.nodeId;
+	console.log(nodeId);
 	$("#existingRooms").empty();
 	chatRooms.forEach( function (room) {
 		let roomElement = $('<div class="btn btn-dark btn-lg btn-block"></div>');
