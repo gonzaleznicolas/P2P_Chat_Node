@@ -1,5 +1,6 @@
 let socket;
 var $inputMessage = $('.inputMessage'); // this is the input message from the input html element
+let myUserId;
 
 $(function () {
 
@@ -10,7 +11,9 @@ $(function () {
 	socket.on('FromServer_OrderedUpdate', fromServer_OrderedUpdate);
 	socket.on('FromServer_ChatLog', fromServer_ChatLog);
 	socket.on('FromServer_AvailableRooms', fromServer_AvailableRooms);
+	socket.on('FromServer_ThisIsMyUserId', fromServer_ThisIsMyUserId);
 	$("#leaveRoomButton").click( onLeaveRoom );
+	$("#addNewChatroomButton").click( onAddNewRoom );
 
 	socket.emit('FromBrowser_ImYourBrowser');
 
@@ -23,18 +26,6 @@ $(function () {
 			giveUpdate(message); // call tob func
 		}
 	});
-
-	// for adding a new chatroom
-	$("#addNewChatroomButton").click(() => {
-
-		//----placeholder logic----
-		console.log("New Room is " + $("#newChatroomName").val());
-		//----placeholder logic----
-
-		$("#newChatroomName").val('');
-	});
-
-
 });
 
 function connectToRoom(chatID){
@@ -99,6 +90,11 @@ function fromServer_AvailableRooms(chatRooms){
 	console.log(chatRooms);
 }
 
+function fromServer_ThisIsMyUserId(id){
+	myUserId = id;
+	console.log("this is my myUserId", myUserId);
+}
+
 function changeToChatScreen(){
 	$("#selectRoom").empty();
 	$("#selectRoom").hide();
@@ -108,5 +104,13 @@ function changeToChatScreen(){
 
 function onLeaveRoom(){
 	socket.emit("FromBrowser_LeaveRoom");
+	setTimeout(() => location.reload(), 1000);
+}
+
+function onAddNewRoom(){
+	console.log("hi");
+	let newRoomName = $("#newChatroomName").val();
+	socket.emit('FromBrowser_CreateRoom', newRoomName);
+	$("#newChatroomName").val('');
 	setTimeout(() => location.reload(), 1000);
 }
