@@ -415,10 +415,16 @@ function sendHeartbeatToServer(){
 		request(options, (err, res, obj) => {
 			if (!Object.keys(obj).length) {
 				console.log("Heartbeat not received");
-			}
-			if (res.body === 'Heartbeat received - Send message history') {
+			} else if (res.body === 'Heartbeat received - Send message history') {
 				console.log('Got a polling request')
 				sendLogToServer(room);
+			}
+			else if (res.body === 'Heartbeat received') {
+				// Ignore
+			}
+			else {
+				// Log error coming from server
+				console.log(res.body)
 			}
 		});
 	});
