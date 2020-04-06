@@ -5,7 +5,7 @@ const ifaces = require('os').networkInterfaces();
 const lodash = require('lodash')
 const PriorityQueue = require('./priorityQueue.js');
 const short_uuid = require('short-uuid');
-const supernodeEndPoint = "http://localhost:4000";
+const supernodeEndPoint = "https://central-server-b819d.appspot.com/";
 
 module.exports = {
 	initialize: initialize
