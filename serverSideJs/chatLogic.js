@@ -86,9 +86,10 @@ function fromEither_Disconnect(){
 FROM BROWSER EVENT HANDLERS
 ********************************************************/ 
 
-function fromBrowser_ImYourBrowser(obj){
+function fromBrowser_ImYourBrowser(obj) {
 	myUserName = obj.userName;
 	console.log("Username: ", myUserName)
+}
 
 function fromBrowser_CreateRoom(newRoomName){
 	console.log("Creating a room with name", newRoomName);
@@ -492,7 +493,7 @@ function sendHeartbeatToServer(){
 	});
 }
 
-function sendLogToServer(room){
+function sendLogToServer(room) {
 	console.log("sending log to server for room "+room)
 
 	const logToSend = chatLog.map((value) => {
