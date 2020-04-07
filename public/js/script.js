@@ -16,6 +16,8 @@ let socket;
 let $inputMessage = $('.inputMessage'); // this is the input message from the input html element
 let myUserId;
 
+let selectedRoom = '';
+
 // ON PAGE LOAD to listen for Socket.IO emits
 
 $(function () {
@@ -28,6 +30,11 @@ $(function () {
 	socket.on('FromServer_ChatLog', fromServer_ChatLog);
 	socket.on('FromServer_AvailableRooms', fromServer_AvailableRooms);
 	socket.on('FromServer_ThisIsMyUserDetails', fromServer_ThisIsMyUserDetails);
+	socket.on('FromServer_Alert', (message) => {
+		// TODO: Make this look nicer
+		alert(message);
+	});
+	socket.on('FromServer_EnterChatroom', changeToChatScreen);
 	$("#leaveRoomButton").click( onLeaveRoom );
 	$("#addNewChatroomButton").click( onAddNewRoom );
 	$("#submitUsernameButton").click( onSubmitUsername );
@@ -151,18 +158,19 @@ function addMessageOnRight(username, message){
  */
 function fromServer_AvailableRooms(chatRooms){
 	$("#existingRooms").empty();
+	chatRooms.sort( (a, b) => {
+		return a.chatRoomName.localeCompare(b.chatRoomName);
+	});
 	chatRooms.forEach( function (room) {
 		let roomElement = $('<div class="btn btn-dark btn-lg btn-block"></div>');
 		roomElement.text(room.chatRoomName);
 		roomElement.click(function(){
 			console.log("connecting to room "+ room.chatRoomName);
 			connectToRoom(room.chatRoomId);
-			$("#chatTitle").text(room.chatRoomName);
-			changeToChatScreen();
+			selectedRoom = room.chatRoomName;
 		});
 		$("#existingRooms").append(roomElement);
 	});
-	console.log(chatRooms);
 }
 
 /**
@@ -180,6 +188,7 @@ function fromServer_ThisIsMyUserDetails(obj){
  * Helper method to change display of room.
  */
 function changeToChatScreen(){
+	$("#chatTitle").text(selectedRoom);
 	$("#selectRoom").empty();
 	$("#selectRoom").hide();
 	$("#leaveRoomButton").show();
@@ -202,8 +211,6 @@ function onLeaveRoom(){
 function onAddNewRoom(){
 	let newRoomName = $("#newChatroomName").val();
 	socket.emit('FromBrowser_CreateRoom', newRoomName);
-	$("#newChatroomName").val('');
-	setTimeout(() => location.reload(), 1000);
 }
 
 /**

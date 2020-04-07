@@ -17,7 +17,7 @@ const ifaces = require('os').networkInterfaces();
 const lodash = require('lodash');
 const PriorityQueue = require('./priorityQueue.js');
 const short_uuid = require('short-uuid');
-const supernodeEndPoint = "https://central-server-b819d.appspot.com/";
+const supernodeEndPoint = "http://localhost:4000";
 
 module.exports = {
 	initialize: initialize
@@ -75,7 +75,7 @@ function initialize (IO_SERVER, IO_CLIENT, portImRunningOn){
 	setInterval( tobApplyUpdates, 500);
 
 	// regularly update my list of available rooms
-	setInterval(() => getChatRooms(), 1000);
+	setInterval( getChatRooms, 1000);
 }
 
 /**
@@ -97,8 +97,8 @@ function ioServerOnConnection(socketToClient){
 	socketToClient.on('FromBrowser_UpdateUsername', fromBrowser_UpdateUsername);
 
 	socketToClient.on('FromOtherServer_iJustConnectedToYou', fromOtherServer_iJustConnectedToYou);
-	socketToClient.on('FromOtherServer_TobMessageOrAck', fromOtherServer_TobMessageOrAck)
-	socketToClient.on('FromOtherServer_MessageToSpecificServer', fromOtherServer_MessageToSpecificServer)
+	socketToClient.on('FromOtherServer_TobMessageOrAck', fromOtherServer_TobMessageOrAck);
+	socketToClient.on('FromOtherServer_MessageToSpecificServer', fromOtherServer_MessageToSpecificServer);
 }
 
 /**
@@ -121,13 +121,10 @@ function fromBrowser_ImYourBrowser(){
 	console.log(new Date().getTime(), "Browser has connected. Start sending it list of room updates.");
 
 	socketToBrowser = this; // save the socket to the browser so I can send messages at any time
-
-	// regularly update the browser's list of available rooms
-	sendBrowserListOfRoomsIntervalObj = setInterval(()=>{socketToBrowser.emit('FromServer_AvailableRooms', chatRooms);}, 1000);
-
+	
 	socketToBrowser.on("disconnect", function(){
 		console.log(new Date().getTime(), "Browser disconnected. Stop sending it available rooms.");
-		clearInterval(sendBrowserListOfRoomsIntervalObj);
+		disconnect();
 	});
 
 	socketToBrowser.emit('FromServer_AvailableRooms', chatRooms);
@@ -147,12 +144,13 @@ function fromBrowser_CreateRoom(newRoomName){
 		json: {name: newRoomName}
 	};
 
-	request(options, (err, res, obj) => {
-		if (res) {
-			getChatRooms(); // update my list of available chat rooms now that i created one
+	request(options, (err, res, body) => {
+		if (res.statusCode === 200) {
+			socketToBrowser.emit('FromServer_Alert', body);
+
 		}
 		else {
-			console.log(err);
+			socketToBrowser.emit('FromServer_Alert', 'Unable to create chatroom');
 		}
 	});
 }
@@ -200,10 +198,13 @@ function fromBrowser_ConnectToRoom(obj){
 						joinedRooms.push(chatID);
 						// start sending heartbeats to the server
 						heartbeatSetIntervalObj = setInterval( sendHeartbeatToServer, 2000);
+						// Notify client to show chatroom page
+						socketToBrowser.emit('FromServer_EnterChatroom');
 						return;
 					}
 				}
 				// Error handling here. All endpoints are invalid.
+				socketToBrowser.emit('FromServer_Alert', 'Unable to connect to chatroom, please try again later.');
 			} else {
 				// No action if the chat room is empty
 				console.log(`Become the first member of room ${chatID}`);
@@ -213,16 +214,17 @@ function fromBrowser_ConnectToRoom(obj){
 				joinedRooms.push(chatID);
 				// start sending heartbeats to the server
 				heartbeatSetIntervalObj = setInterval( sendHeartbeatToServer, 2000);
+				// Notify client to show chatroom page
+				socketToBrowser.emit('FromServer_EnterChatroom');
 			}
 		} catch (e) {
 			if (err) {
 				console.error(err)
 			}
 			else {
-				console.error(e)
+				console.error('Error occurred connecting to a chatroom: ' + e)
 			}
 		}
-
 	});
 }
 
@@ -267,6 +269,10 @@ function fromBrowser_SendMessageToSpecificServer(obj /* {toIp, toPort, toIdentif
 function fromBrowser_LeaveRoom(){
 	console.log(new Date().getTime(), "Leaving room. Disconnecting from everyone.");
 
+	disconnect();
+}
+
+function disconnect() {
 	clearInterval(heartbeatSetIntervalObj); // stop sending heartbeats
 
 	// disconnect anyone connected to my server socket
@@ -294,7 +300,7 @@ function fromBrowser_LeaveRoom(){
 	myTS.serverIdentifier = myIdentifier;
 	connectToSelf();
 
-	// get list of chat rooms because browser is going back to 
+	// get list of chat rooms because browser is going back to
 	// landing page with list of chat rooms and will need them
 	getChatRooms();
 }
@@ -404,7 +410,7 @@ function connectAsClientToServer(ipToConnectTo, portToConnectTo, identifierToCon
 }
 
 /**
- * connecToSelf
+ * connectToSelf
  * a helper method to connect to self after node boots up.
  */
 function connectToSelf(){
@@ -565,22 +571,57 @@ function getIPAddressOfThisMachine(){
 	return ip;
 }
 
+
+/**
+ * Compares if oldChatrooms is same as current chatrooms
+ * @return boolean True if they are the same, false otherwise
+ */
+function isChatroomSame(oldChatrooms){
+	if (chatRooms.length !== oldChatrooms.length) {
+		return false;
+	}
+
+	// Now that they are the same size, all elements must exist in both rooms to be equal
+	const chatroomIds = chatRooms.map((chatroom) => {
+		return chatroom.chatRoomId;
+	});
+
+	for (let index = 0; index < oldChatrooms.length; index++) {
+		const roomId = oldChatrooms[index].chatRoomId;
+		if (!chatroomIds.includes(roomId)) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
 function getChatRooms(){
 	let options = {
 		url: supernodeEndPoint + "/chatrooms",
 		method: 'GET',
 	};
 
+	const oldChatrooms = chatRooms;
+
 	request(options, (err, res, body) => {
 		try {
 			chatRooms = body ? (JSON.parse(body)).rooms : [];
+
+			// if chatrooms is different, send update to browser
+			if (socketToBrowser) {
+				if (!isChatroomSame(oldChatrooms)) {
+					console.log("Chatrooms changed, updating the client");
+					socketToBrowser.emit('FromServer_AvailableRooms', chatRooms);
+				}
+			}
 		}
 		catch (e) {
 			if (err) {
 				console.error(err)
 			}
 			else {
-				console.error(e)
+				console.error('Error parsing the body from getting chatrooms: ' + e)
 			}
 			chatRooms = []
 		}
@@ -628,7 +669,7 @@ function sendHeartbeatToServer(){
 					console.error(err);
 				}
 				else {
-					console.error(e);
+					console.error('Error occurred sending heartbeat: ' + e);
 				}
 			}
 		});
@@ -674,7 +715,7 @@ function sendLogToServer(room){
 				console.error(err)
 			}
 			else {
-				console.error(e);
+				console.error('Error occurred sending message log to supernode: ' + e);
 			}
 		}
 	});
