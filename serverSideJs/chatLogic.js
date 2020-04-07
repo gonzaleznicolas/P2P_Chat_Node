@@ -147,13 +147,12 @@ function fromBrowser_CreateRoom(newRoomName){
 		json: {name: newRoomName}
 	};
 
-	request(options, (err, res, body) => {
-		if (res.statusCode === 200) {
-			socketToBrowser.emit('FromServer_Alert', body);
-
+	request(options, (err, res, obj) => {
+		if (res) {
+			getChatRooms(); // update my list of available chat rooms now that i created one
 		}
 		else {
-			socketToBrowser.emit('FromServer_Alert', 'Unable to create chatroom');
+			console.log(err);
 		}
 	});
 }
