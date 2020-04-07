@@ -127,7 +127,7 @@ function fromBrowser_ImYourBrowser(){
 
 	socketToBrowser.on("disconnect", function(){
 		console.log(new Date().getTime(), "Browser disconnected. Stop sending it available rooms.");
-		clearInterval(sendBrowserListOfRoomsIntervalObj);
+		disconnect();
 	});
 
 	socketToBrowser.emit('FromServer_AvailableRooms', chatRooms);
@@ -219,7 +219,7 @@ function fromBrowser_ConnectToRoom(obj){
 				console.error(err)
 			}
 			else {
-				console.error(e)
+				console.error('Error occurred connecting to a chatroom: ' + e)
 			}
 		}
 
@@ -267,6 +267,10 @@ function fromBrowser_SendMessageToSpecificServer(obj /* {toIp, toPort, toIdentif
 function fromBrowser_LeaveRoom(){
 	console.log(new Date().getTime(), "Leaving room. Disconnecting from everyone.");
 
+	disconnect();
+}
+
+function disconnect() {
 	clearInterval(heartbeatSetIntervalObj); // stop sending heartbeats
 
 	// disconnect anyone connected to my server socket
@@ -294,7 +298,7 @@ function fromBrowser_LeaveRoom(){
 	myTS.serverIdentifier = myIdentifier;
 	connectToSelf();
 
-	// get list of chat rooms because browser is going back to 
+	// get list of chat rooms because browser is going back to
 	// landing page with list of chat rooms and will need them
 	getChatRooms();
 }
@@ -580,7 +584,7 @@ function getChatRooms(){
 				console.error(err)
 			}
 			else {
-				console.error(e)
+				console.error('Error parsing the body from getting chatrooms: ' + e)
 			}
 			chatRooms = []
 		}
@@ -628,7 +632,7 @@ function sendHeartbeatToServer(){
 					console.error(err);
 				}
 				else {
-					console.error(e);
+					console.error('Error occurred sending heartbeat: ' + e);
 				}
 			}
 		});
@@ -674,7 +678,7 @@ function sendLogToServer(room){
 				console.error(err)
 			}
 			else {
-				console.error(e);
+				console.error('Error occurred sending message log to supernode: ' + e);
 			}
 		}
 	});
