@@ -201,13 +201,10 @@ function fromBrowser_ConnectToRoom(obj){
 						joinedRooms.push(chatID);
 						// start sending heartbeats to the server
 						heartbeatSetIntervalObj = setInterval( sendHeartbeatToServer, 2000);
-						// Notify client to show chatroom page
-						socketToBrowser.emit('FromServer_EnterChatroom');
 						return;
 					}
 				}
 				// Error handling here. All endpoints are invalid.
-				socketToBrowser.emit('FromServer_Alert', 'Unable to connect to chatroom, please try again later.');
 			} else {
 				// No action if the chat room is empty
 				console.log(`Become the first member of room ${chatID}`);
@@ -217,8 +214,6 @@ function fromBrowser_ConnectToRoom(obj){
 				joinedRooms.push(chatID);
 				// start sending heartbeats to the server
 				heartbeatSetIntervalObj = setInterval( sendHeartbeatToServer, 2000);
-				// Notify client to show chatroom page
-				socketToBrowser.emit('FromServer_EnterChatroom');
 			}
 		} catch (e) {
 			if (err) {
@@ -228,6 +223,7 @@ function fromBrowser_ConnectToRoom(obj){
 				console.error('Error occurred connecting to a chatroom: ' + e)
 			}
 		}
+
 	});
 }
 
@@ -413,7 +409,7 @@ function connectAsClientToServer(ipToConnectTo, portToConnectTo, identifierToCon
 }
 
 /**
- * connectToSelf
+ * connecToSelf
  * a helper method to connect to self after node boots up.
  */
 function connectToSelf(){

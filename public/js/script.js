@@ -16,8 +16,6 @@ let socket;
 let $inputMessage = $('.inputMessage'); // this is the input message from the input html element
 let myUserId;
 
-let selectedRoom = '';
-
 // ON PAGE LOAD to listen for Socket.IO emits
 
 $(function () {
@@ -34,7 +32,6 @@ $(function () {
 		// TODO: Make this look nicer
 		alert(message);
 	});
-	socket.on('FromServer_EnterChatroom', changeToChatScreen);
 	$("#leaveRoomButton").click( onLeaveRoom );
 	$("#addNewChatroomButton").click( onAddNewRoom );
 	$("#submitUsernameButton").click( onSubmitUsername );
@@ -167,7 +164,8 @@ function fromServer_AvailableRooms(chatRooms){
 		roomElement.click(function(){
 			console.log("connecting to room "+ room.chatRoomName);
 			connectToRoom(room.chatRoomId);
-			selectedRoom = room.chatRoomName;
+			$("#chatTitle").text(room.chatRoomName);
+			changeToChatScreen();
 		});
 		$("#existingRooms").append(roomElement);
 	});
@@ -188,7 +186,6 @@ function fromServer_ThisIsMyUserDetails(obj){
  * Helper method to change display of room.
  */
 function changeToChatScreen(){
-	$("#chatTitle").text(selectedRoom);
 	$("#selectRoom").empty();
 	$("#selectRoom").hide();
 	$("#leaveRoomButton").show();
