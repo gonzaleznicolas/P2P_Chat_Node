@@ -17,7 +17,7 @@ const ifaces = require('os').networkInterfaces();
 const lodash = require('lodash');
 const PriorityQueue = require('./priorityQueue.js');
 const short_uuid = require('short-uuid');
-const supernodeEndPoint = "http://localhost:4000";
+const supernodeEndPoint = "https://central-server-b819d.appspot.com/";
 
 module.exports = {
 	initialize: initialize
@@ -75,7 +75,7 @@ function initialize (IO_SERVER, IO_CLIENT, portImRunningOn){
 	setInterval( tobApplyUpdates, 500);
 
 	// regularly update my list of available rooms
-	setInterval( getChatRooms, 1000);
+	setInterval(() => getChatRooms(), 1000);
 }
 
 /**
@@ -97,8 +97,8 @@ function ioServerOnConnection(socketToClient){
 	socketToClient.on('FromBrowser_UpdateUsername', fromBrowser_UpdateUsername);
 
 	socketToClient.on('FromOtherServer_iJustConnectedToYou', fromOtherServer_iJustConnectedToYou);
-	socketToClient.on('FromOtherServer_TobMessageOrAck', fromOtherServer_TobMessageOrAck);
-	socketToClient.on('FromOtherServer_MessageToSpecificServer', fromOtherServer_MessageToSpecificServer);
+	socketToClient.on('FromOtherServer_TobMessageOrAck', fromOtherServer_TobMessageOrAck)
+	socketToClient.on('FromOtherServer_MessageToSpecificServer', fromOtherServer_MessageToSpecificServer)
 }
 
 /**
@@ -121,7 +121,10 @@ function fromBrowser_ImYourBrowser(){
 	console.log(new Date().getTime(), "Browser has connected. Start sending it list of room updates.");
 
 	socketToBrowser = this; // save the socket to the browser so I can send messages at any time
-	
+
+	// regularly update the browser's list of available rooms
+	sendBrowserListOfRoomsIntervalObj = setInterval(()=>{socketToBrowser.emit('FromServer_AvailableRooms', chatRooms);}, 1000);
+
 	socketToBrowser.on("disconnect", function(){
 		console.log(new Date().getTime(), "Browser disconnected. Stop sending it available rooms.");
 		disconnect();
@@ -571,50 +574,15 @@ function getIPAddressOfThisMachine(){
 	return ip;
 }
 
-
-/**
- * Compares if oldChatrooms is same as current chatrooms
- * @return boolean True if they are the same, false otherwise
- */
-function isChatroomSame(oldChatrooms){
-	if (chatRooms.length !== oldChatrooms.length) {
-		return false;
-	}
-
-	// Now that they are the same size, all elements must exist in both rooms to be equal
-	const chatroomIds = chatRooms.map((chatroom) => {
-		return chatroom.chatRoomId;
-	});
-
-	for (let index = 0; index < oldChatrooms.length; index++) {
-		const roomId = oldChatrooms[index].chatRoomId;
-		if (!chatroomIds.includes(roomId)) {
-			return false;
-		}
-	}
-
-	return true;
-}
-
 function getChatRooms(){
 	let options = {
 		url: supernodeEndPoint + "/chatrooms",
 		method: 'GET',
 	};
 
-	const oldChatrooms = chatRooms;
-
 	request(options, (err, res, body) => {
 		try {
 			chatRooms = body ? (JSON.parse(body)).rooms : [];
-
-			// if chatrooms is different, send update to browser
-			if (socketToBrowser) {
-				if (!isChatroomSame(oldChatrooms)) {
-					console.log("Chatrooms changed, updating the client");
-					socketToBrowser.emit('FromServer_AvailableRooms', chatRooms);
-				}
-			}
 		}
 		catch (e) {
 			if (err) {
