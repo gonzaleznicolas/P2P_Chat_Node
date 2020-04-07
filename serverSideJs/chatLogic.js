@@ -5,7 +5,7 @@ const ifaces = require('os').networkInterfaces();
 const lodash = require('lodash')
 const PriorityQueue = require('./priorityQueue.js');
 const short_uuid = require('short-uuid');
-const supernodeEndPoint = "https://central-server-b819d.appspot.com" 
+const supernodeEndPoint = "https://central-server-b819d.appspot.com/";
 
 module.exports = {
 	initialize: initialize
@@ -110,7 +110,13 @@ function fromBrowser_CreateRoom(newRoomName){
 	};
 
 	request(options, (err, res, obj) => {
-		getChatRooms(); // update my list of available chat rooms now that i created one
+		if (res) {
+			getChatRooms(); // update my list of available chat rooms now that i created one
+		}
+		else {
+			// TODO: Propgate error to user
+			console.log(err);
+		}
 	});
 }
 
@@ -136,28 +142,38 @@ function fromBrowser_ConnectToRoom(obj){
 	};
 
 	request(options, (err, res, obj) => {
-		chatMembers[chatID] = obj.members;
-		if (Array.isArray(chatMembers[chatID]) && chatMembers[chatID].length) {
-			for (const member of chatMembers[chatID]) {
-				if (member.userId != myIdentifier && (member.ip != myIP || member.port != myPort)) {
-					connectAsClientToServer(member.ip, member.port, member.userId);
-					joinedRooms.push(chatID)
-					// start sending heartbeats to the server
-					heartbeatSetIntervalObj = setInterval( sendHeartbeatToServer, 2000);
-					return;
+		try {
+			chatMembers[chatID] = obj.members;
+			if (Array.isArray(chatMembers[chatID]) && chatMembers[chatID].length) {
+				for (const member of chatMembers[chatID]) {
+					if (member.userId != myIdentifier && (member.ip != myIP || member.port != myPort)) {
+						connectAsClientToServer(member.ip, member.port, member.userId);
+						joinedRooms.push(chatID)
+						// start sending heartbeats to the server
+						heartbeatSetIntervalObj = setInterval( sendHeartbeatToServer, 2000);
+						return;
+					}
 				}
+				// Error handling here. All endpoints are invalid.
+			} else {
+				// No action if the chat room is empty
+				console.log(`Become the first member of room ${chatID}`)
+				chatLog = obj.log;
+				console.log("chat history sent to me by server:", chatLog);
+				socketToBrowser.emit('FromServer_ChatLog', chatLog);
+				joinedRooms.push(chatID)
+				// start sending heartbeats to the server
+				heartbeatSetIntervalObj = setInterval( sendHeartbeatToServer, 2000);
 			}
-			// Error handling here. All endpoints are invalid.
-		} else {
-			// No action if the chat room is empty
-			console.log(`Become the first member of room ${chatID}`)
-			chatLog = obj.log;
-			console.log("chat history sent to me by server:", chatLog);
-			socketToBrowser.emit('FromServer_ChatLog', chatLog);
-			joinedRooms.push(chatID)
-			// start sending heartbeats to the server
-			heartbeatSetIntervalObj = setInterval( sendHeartbeatToServer, 2000);
+		} catch (e) {
+			if (err) {
+				console.error(err)
 			}
+			else {
+				console.error(e)
+			}
+		}
+
 	});
 }
 
@@ -470,7 +486,18 @@ function getChatRooms(){
 	};
 
 	request(options, (err, res, body) => {
-		chatRooms = (JSON.parse(body)).rooms;
+		try {
+			chatRooms = body ? (JSON.parse(body)).rooms : [];
+		}
+		catch (e) {
+			if (err) {
+				console.error(err)
+			}
+			else {
+				console.error(e)
+			}
+			chatRooms = []
+		}
 	});
 }
 
@@ -490,18 +517,28 @@ function sendHeartbeatToServer(){
 		};
 	
 		request(options, (err, res, obj) => {
-			if (!Object.keys(obj).length) {
-				console.log("Heartbeat not received");
-			} else if (res.body === 'Heartbeat received - Send message history') {
-				console.log('Got a polling request')
-				sendLogToServer(room);
+			try {
+				if (!Object.keys(obj).length) {
+					console.log("Heartbeat not received");
+				} else if (res.body === 'Heartbeat received - Send message history') {
+					console.log('Got a polling request')
+					sendLogToServer(room);
+				}
+				else if (res.body === 'Heartbeat received') {
+					// Ignore
+				}
+				else {
+					// Log error coming from server
+					console.error(res.body)
+				}
 			}
-			else if (res.body === 'Heartbeat received') {
-				// Ignore
-			}
-			else {
-				// Log error coming from server
-				console.error(res.body)
+			catch (e) {
+				if (err) {
+					console.error(err);
+				}
+				else {
+					console.error(e);
+				}
 			}
 		});
 	});
@@ -530,15 +567,24 @@ function sendLogToServer(room){
 	};
 
 	request(options, (err, res, obj) => {
-		if (!Object.keys(obj).length) {
-			console.log("Heartbeat not received");
-		}
-		else if (res.body === 'Message log received') {
-			// Ignore
-		}
-		else {
-			// Log error coming from server
-			console.error(res.body)
+		try {
+			if (!Object.keys(obj).length) {
+				console.log("Heartbeat not received");
+			}
+			else if (res.body === 'Message log received') {
+				// Ignore
+			}
+			else {
+				// Log error coming from server
+				console.error(res.body)
+			}
+		} catch (e) {
+			if (err) {
+				console.error(err)
+			}
+			else {
+				console.error(e);
+			}
 		}
 	});
 }
