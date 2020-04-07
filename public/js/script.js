@@ -102,7 +102,7 @@ function fromServer_ChatLog(chatLog){
 function addMessageToScreen(userId, username, message){
 	// as a potential debug note, we are using non strict equality operator here
 	// assumption is to compare value of str and number
-	if (userId == myUserId){
+	if (userId === myUserId){
 		addMessageOnRight(username, message);
 	}
 	else{

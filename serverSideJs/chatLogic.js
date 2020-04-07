@@ -2,7 +2,7 @@
 
 const request = require('request');
 const ifaces = require('os').networkInterfaces();
-const lodash = require('lodash')
+const lodash = require('lodash');
 const PriorityQueue = require('./priorityQueue.js');
 const short_uuid = require('short-uuid');
 const supernodeEndPoint = "https://central-server-b819d.appspot.com/";
@@ -25,7 +25,7 @@ let chatRooms = [];
 let joinedRooms = [];
 let chatMembers = {};
 let serversImConnectedTo = new Map();
-let myTS = {time: 0, serverIdentifier: ""}
+let myTS = {time: 0, serverIdentifier: ""};
 let Q = new PriorityQueue();
 
 let heartbeatSetIntervalObj;
@@ -114,7 +114,6 @@ function fromBrowser_CreateRoom(newRoomName){
 			getChatRooms(); // update my list of available chat rooms now that i created one
 		}
 		else {
-			// TODO: Propgate error to user
 			console.log(err);
 		}
 	});
@@ -146,9 +145,9 @@ function fromBrowser_ConnectToRoom(obj){
 			chatMembers[chatID] = obj.members;
 			if (Array.isArray(chatMembers[chatID]) && chatMembers[chatID].length) {
 				for (const member of chatMembers[chatID]) {
-					if (member.userId != myIdentifier && (member.ip != myIP || member.port != myPort)) {
+					if (member.userId !== myIdentifier && (member.ip !== myIP || member.port !== myPort)) {
 						connectAsClientToServer(member.ip, member.port, member.userId);
-						joinedRooms.push(chatID)
+						joinedRooms.push(chatID);
 						// start sending heartbeats to the server
 						heartbeatSetIntervalObj = setInterval( sendHeartbeatToServer, 2000);
 						return;
@@ -157,11 +156,11 @@ function fromBrowser_ConnectToRoom(obj){
 				// Error handling here. All endpoints are invalid.
 			} else {
 				// No action if the chat room is empty
-				console.log(`Become the first member of room ${chatID}`)
+				console.log(`Become the first member of room ${chatID}`);
 				chatLog = obj.log;
 				console.log("chat history sent to me by server:", chatLog);
 				socketToBrowser.emit('FromServer_ChatLog', chatLog);
-				joinedRooms.push(chatID)
+				joinedRooms.push(chatID);
 				// start sending heartbeats to the server
 				heartbeatSetIntervalObj = setInterval( sendHeartbeatToServer, 2000);
 			}
@@ -183,7 +182,7 @@ function fromBrowser_GiveTobUpdate(update){
 
 function fromBrowser_SendMessageToSpecificServer(obj /* {toIp, toPort, toIdentifier, msg} */){
 	let serverToSendMessageTo = serversImConnectedTo.get(obj.toIdentifier);
-	if(serverToSendMessageTo == undefined){
+	if(serverToSendMessageTo === undefined){
 		console.log("Not connected to that server.");
 		return;
 	}
@@ -243,7 +242,7 @@ function fromOtherServer_iJustConnectedToYou(obj){
 	
 	// if im already connected to the server that just connected to me
 	let serverThatJustConnectedToMe = serversImConnectedTo.get(obj.identifier);
-	if (serverThatJustConnectedToMe != undefined){
+	if (serverThatJustConnectedToMe !== undefined){
 		// update my record of its time stamp
 		console.log(new Date().getTime(), "Updating TS=", obj.TS.time, " for ", obj.identifier);
 		serverThatJustConnectedToMe.TS.time = obj.TS.time;
@@ -273,7 +272,6 @@ CONNECTION FUNCTIONS
 
 function connectAsClientToServer(ipToConnectTo, portToConnectTo, identifierToConnectTo){
 	if (serversImConnectedTo.has(identifierToConnectTo)) {
-		//console.log("Already connected to ", identifierToConnectTo);
 		return;
 	}
 
@@ -364,7 +362,7 @@ function tobReceiveMessageOrAck(obj){
 	let from = serversImConnectedTo.get(obj.fromIdentifier);
 	from.TS.time = obj.TS.time;
 
-	let isMessage = (obj.messageOrAck == "message");
+	let isMessage = (obj.messageOrAck === "message");
 
 	if (isMessage)
 		Q.enqueue(obj);
@@ -373,7 +371,7 @@ function tobReceiveMessageOrAck(obj){
 		myTS.time = obj.TS.time;
 
 		serversImConnectedTo.forEach(function (server){
-			if( server.identifier != myIdentifier ){
+			if( server.identifier !== myIdentifier ){
 				server.socket.emit('FromOtherServer_TobMessageOrAck', {
 					fromIp: myIP,
 					fromPort: myPort,
@@ -389,15 +387,13 @@ function tobReceiveMessageOrAck(obj){
 
 // executes every second
 function tobApplyUpdates(){
-	//Q.print();
-
 	let update = Q.head();
-	if (update == -1){
+	if (update === -1){
 		//console.log(new Date().getTime(), "nothing");
 		return; // queue is empty
 	}
 
-	let uts = update.TS
+	let uts = update.TS;
 
 	console.log(new Date().getTime(), "myTS time: "+ myTS.time+" myTS serverIdentifier: "+ myTS.serverIdentifier);
 
@@ -450,19 +446,6 @@ function compileArrayOfServersImConnectedTo(){
 		result = it.next();
 	}
 	return array;
-}
-
-function compareTimeStamps(a, b){
-	if(a.time != b.time)
-		return a.time - b.time;
-	else{
-		if (a.serverIdentifier < b.serverIdentifier)
-			return -1;
-		else if (a.serverIdentifier > b.serverIdentifier)
-			return 1;
-		else
-			return 0;
-	}
 }
 
 function getIPAddressOfThisMachine(){
@@ -521,7 +504,7 @@ function sendHeartbeatToServer(){
 				if (!Object.keys(obj).length) {
 					console.log("Heartbeat not received");
 				} else if (res.body === 'Heartbeat received - Send message history') {
-					console.log('Got a polling request')
+					console.log('Got a polling request');
 					sendLogToServer(room);
 				}
 				else if (res.body === 'Heartbeat received') {
@@ -545,7 +528,7 @@ function sendHeartbeatToServer(){
 }
 
 function sendLogToServer(room){
-	console.log("sending log to server for room "+room)
+	console.log("sending log to server for room "+room);
 
 	const logToSend = chatLog.map((value) => {
 		return {
