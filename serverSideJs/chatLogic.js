@@ -1,3 +1,15 @@
+/* Mesh Chat - Developed by Michael Han, Nicolas Gonzalez, Sadat Islam, Chevy O’Dell, and Kent Wong
+CPSC 559 Winter 2020 - chatLogic.js
+
+This script houses the back end chat logic in which the local back-end node will use to process chat messages.
+There are also logic and functionality in here to communicate with the supernode and other nodes.
+
+The point of entry is the initialize() function, this is called externally from index.js
+It will then proceed to initialize a uuid for the node, connect to itself, and proceed to issue tob updates every
+1 second.
+
+*/
+
 'use strict';
 
 const request = require('request');
@@ -31,6 +43,14 @@ let Q = new PriorityQueue();
 let heartbeatSetIntervalObj;
 let sendBrowserListOfRoomsIntervalObj;
 
+/**
+ * Initialization function and entry point.
+ * this method will register a uuid with itself, get necessary information such as IP and port.
+ * It will then listen for socket.io events and connect to itself.
+ * @param IO_SERVER
+ * @param IO_CLIENT
+ * @param portImRunningOn
+ */
 function initialize (IO_SERVER, IO_CLIENT, portImRunningOn){
 
 	myIdentifier = short_uuid().new();
@@ -58,6 +78,11 @@ function initialize (IO_SERVER, IO_CLIENT, portImRunningOn){
 	setInterval(() => getChatRooms(), 1000);
 }
 
+/**
+ * io Server on Connection
+ * this method houses all the listener events that the node should catch and respond to.
+ * @param socketToClient
+ */
 function ioServerOnConnection(socketToClient){
 	console.log(new Date().getTime(), 'Someone connected');
 
@@ -76,14 +101,22 @@ function ioServerOnConnection(socketToClient){
 	socketToClient.on('FromOtherServer_MessageToSpecificServer', fromOtherServer_MessageToSpecificServer)
 }
 
+/**
+ * from Either disconnect
+ *  this is a helper method to log to console the time stamp and notifying someone has disconnected.
+ */
 function fromEither_Disconnect(){
 	console.log(new Date().getTime(), 'Someone who was connected to me disconnected.');
 }
 
 /********************************************************
 FROM BROWSER EVENT HANDLERS
-********************************************************/ 
+********************************************************/
 
+/**
+ * fromBrowser_imYourBrowser
+ * this is a helper method that emits the chat rooms and this node's details.
+ */
 function fromBrowser_ImYourBrowser(){
 	console.log(new Date().getTime(), "Browser has connected. Start sending it list of room updates.");
 
@@ -101,6 +134,11 @@ function fromBrowser_ImYourBrowser(){
 	socketToBrowser.emit('FromServer_ThisIsMyUserDetails', {userId: myIdentifier, username: myUserName});
 }
 
+/**
+ * fromBrowser_Createroom
+ * this is a helper method to create a new room, sends a post request to the supernode end point.
+ * @param newRoomName
+ */
 function fromBrowser_CreateRoom(newRoomName){
 	console.log("Creating a room with name", newRoomName);
 	let options = {
@@ -119,10 +157,21 @@ function fromBrowser_CreateRoom(newRoomName){
 	});
 }
 
+/**
+ * fromBrowser_UpdateUsername
+ * this is a helper method to update the user alias (username).
+ * @param newUsername
+ */
 function fromBrowser_UpdateUsername(newUsername){
 	myUserName = newUsername;
 }
 
+/**
+ * fromBrowser_ConnectToRoom
+ * this is a helper method used to connect to rooms by contacting the supernode.
+ * Once the node is in the chat room, it will iteratively connect to all other peers.
+ * @param obj
+ */
 function fromBrowser_ConnectToRoom(obj){
 	let chatID = obj.chatID;
 
@@ -139,11 +188,12 @@ function fromBrowser_ConnectToRoom(obj){
 		method: 'POST',
 		json: data
 	};
-
+	// start building the request
 	request(options, (err, res, obj) => {
 		try {
 			chatMembers[chatID] = obj.members;
 			if (Array.isArray(chatMembers[chatID]) && chatMembers[chatID].length) {
+				// iterate through all chat members and connect to
 				for (const member of chatMembers[chatID]) {
 					if (member.userId !== myIdentifier && (member.ip !== myIP || member.port !== myPort)) {
 						connectAsClientToServer(member.ip, member.port, member.userId);
@@ -176,10 +226,22 @@ function fromBrowser_ConnectToRoom(obj){
 	});
 }
 
+/**
+ * fromBrowser_giveTobUpdate
+ * this is a helper method to send tob updates, which in laymans are the chat messages. update should be an object
+ * containing string data in it's properties.
+ * @param update
+ */
 function fromBrowser_GiveTobUpdate(update){
 	tobSendUpdate(update);
 }
 
+/**
+ * fromBrowser_SendMessagetoSpecificServer
+ * this is a helper method to send messages to a specific server.
+ * obj
+ * @param obj - object with string data (destination IP, destination port, Identifer, and the string payload
+ */
 function fromBrowser_SendMessageToSpecificServer(obj /* {toIp, toPort, toIdentifier, msg} */){
 	let serverToSendMessageTo = serversImConnectedTo.get(obj.toIdentifier);
 	if(serverToSendMessageTo === undefined){
@@ -198,6 +260,10 @@ function fromBrowser_SendMessageToSpecificServer(obj /* {toIp, toPort, toIdentif
 	});
 }
 
+/**
+ * fromBrowser_LeaveRoom
+ * this is a helper method to leave a room.
+ */
 function fromBrowser_LeaveRoom(){
 	console.log(new Date().getTime(), "Leaving room. Disconnecting from everyone.");
 
@@ -235,8 +301,14 @@ function fromBrowser_LeaveRoom(){
 
 /********************************************************
 FROM OTHER SERVER EVENT HANDLERS
-********************************************************/ 
+********************************************************/
 
+/**
+ * fromOtherServer_iJustConnectedToYou
+ * Catches a socket.io emit event; a helper receiver method used to finalize a connection.
+ * does upkeep such as ts updates and bidirection connections. Will iterate through connector nodes to connect to them.
+ * @param obj
+ */
 function fromOtherServer_iJustConnectedToYou(obj){
 	console.log(new Date().getTime(), "Server ", obj.identifier, " just connected to me.");
 	
@@ -257,10 +329,20 @@ function fromOtherServer_iJustConnectedToYou(obj){
 	});
 }
 
+/**
+ * fromOtherServer_TobMessageOrAck
+ * Catches a socket.io event; fire tob message for ack purpose.
+ * @param obj - contains a time stamp (logical)
+ */
 function fromOtherServer_TobMessageOrAck(obj){
 	tobReceiveMessageOrAck(obj);
 }
 
+/**
+ * fromOtherServer_MessageToSpecificServer
+ * Catches a socket.io event; for console logging object str payloads and identifying a sender
+ * @param obj
+ */
 function fromOtherServer_MessageToSpecificServer(obj){
 	console.log(new Date().getTime(), "Server ", obj.fromIdentifier, " sent me the message:");
 	console.log(new Date().getTime(), obj.msg);
@@ -268,8 +350,16 @@ function fromOtherServer_MessageToSpecificServer(obj){
 
 /********************************************************
 CONNECTION FUNCTIONS
-********************************************************/ 
+********************************************************/
 
+/**
+ * connectAsClientToServer.
+ * delivers connection credentials and connects to other nodes. Emits necessary information to broadcast
+ * this connection or disconnect
+ * @param ipToConnectTo - ip destination
+ * @param portToConnectTo - port destination
+ * @param identifierToConnectTo - identifer to connect to
+ */
 function connectAsClientToServer(ipToConnectTo, portToConnectTo, identifierToConnectTo){
 	if (serversImConnectedTo.has(identifierToConnectTo)) {
 		return;
@@ -313,6 +403,10 @@ function connectAsClientToServer(ipToConnectTo, portToConnectTo, identifierToCon
 	})
 }
 
+/**
+ * connecToSelf
+ * a helper method to connect to self after node boots up.
+ */
 function connectToSelf(){
 	if (serversImConnectedTo.has(myIdentifier))
 		return;
@@ -421,12 +515,21 @@ function tobApplyUpdates(){
 
 /********************************************************
  HELPER FUNCTIONS
-********************************************************/ 
+********************************************************/
 
+/**
+ * getSocketsConnectedToServerSocket
+ * helper method to get socket information back in an array
+ * @returns {Object[]}
+ */
 function getSocketsConnectedToServerSocket() {
     return Object.values(ioServer.of("/").connected);
 }
 
+/**
+ * printListOfServersImConnectedTo
+ * helper method to display peers
+ */
 function printListOfServersImConnectedTo(){
 	console.log(new Date().getTime(), "My connections:");
 	let it = serversImConnectedTo.keys();
@@ -484,6 +587,11 @@ function getChatRooms(){
 	});
 }
 
+/**
+ * sendHeartBeatToServer
+ * helper method to send heart beat to supernode. Used to keep contact with the supernode.
+ * Constructs a POST request to sustain upkeep data and alive status to supernode.
+ */
 function sendHeartbeatToServer(){
 	joinedRooms.forEach((room) => {
 		let data = {
