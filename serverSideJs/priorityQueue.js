@@ -7,13 +7,9 @@ module.exports = class PriorityQueue
 		this._array = [];
 	}
 
-	print(){
-		console.log(this._array);
-	}
-
 	head()
 	{
-		if(this._array.length == 0)
+		if(this._array.length === 0)
 			return -1;
 		else
 			return this._array[0];
@@ -32,10 +28,10 @@ module.exports = class PriorityQueue
 		return u;
 	}
 
-}
+};
 
 function compareTimeStamps(a, b){
-	if(a.time != b.time)
+	if(a.time !== b.time)
 		return a.time - b.time;
 	else{
 		if (a.machineIdentifier < b.machineIdentifier)
