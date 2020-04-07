@@ -28,6 +28,10 @@ $(function () {
 	socket.on('FromServer_ChatLog', fromServer_ChatLog);
 	socket.on('FromServer_AvailableRooms', fromServer_AvailableRooms);
 	socket.on('FromServer_ThisIsMyUserDetails', fromServer_ThisIsMyUserDetails);
+	socket.on('FromServer_Alert', (message) => {
+		// TODO: Make this look nicer
+		alert(message);
+	});
 	$("#leaveRoomButton").click( onLeaveRoom );
 	$("#addNewChatroomButton").click( onAddNewRoom );
 	$("#submitUsernameButton").click( onSubmitUsername );
@@ -151,6 +155,9 @@ function addMessageOnRight(username, message){
  */
 function fromServer_AvailableRooms(chatRooms){
 	$("#existingRooms").empty();
+	chatRooms.sort( (a, b) => {
+		return a.chatRoomName.localeCompare(b.chatRoomName);
+	});
 	chatRooms.forEach( function (room) {
 		let roomElement = $('<div class="btn btn-dark btn-lg btn-block"></div>');
 		roomElement.text(room.chatRoomName);
@@ -162,7 +169,6 @@ function fromServer_AvailableRooms(chatRooms){
 		});
 		$("#existingRooms").append(roomElement);
 	});
-	console.log(chatRooms);
 }
 
 /**
@@ -202,8 +208,6 @@ function onLeaveRoom(){
 function onAddNewRoom(){
 	let newRoomName = $("#newChatroomName").val();
 	socket.emit('FromBrowser_CreateRoom', newRoomName);
-	$("#newChatroomName").val('');
-	setTimeout(() => location.reload(), 1000);
 }
 
 /**
