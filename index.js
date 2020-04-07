@@ -1,3 +1,11 @@
+/* Mesh Chat - Developed by Michael Han, Nicolas Gonzalez, Sadat Islam, Chevy O’Dell, and Kent Wong
+CPSC 559 Winter 2020 - index.js
+
+This script is the launch pad for the app and is what should be started up with node.
+Spins up node with basic information and carrys onto the entry point in chatLogic.
+*/
+
+
 let express = require('express');
 let app = express();
 let http = require('http').createServer(app);
