@@ -17,7 +17,7 @@ const ifaces = require('os').networkInterfaces();
 const lodash = require('lodash');
 const PriorityQueue = require('./priorityQueue.js');
 const short_uuid = require('short-uuid');
-const supernodeEndPoint = "http://localhost:4000";
+const supernodeEndPoint = "https://central-server-b819d.appspot.com/";
 
 module.exports = {
 	initialize: initialize
@@ -121,7 +121,7 @@ function fromBrowser_ImYourBrowser(){
 	console.log(new Date().getTime(), "Browser has connected. Start sending it list of room updates.");
 
 	socketToBrowser = this; // save the socket to the browser so I can send messages at any time
-	
+
 	socketToBrowser.on("disconnect", function(){
 		console.log(new Date().getTime(), "Browser disconnected. Stop sending it available rooms.");
 		disconnect();
@@ -317,7 +317,7 @@ FROM OTHER SERVER EVENT HANDLERS
  */
 function fromOtherServer_iJustConnectedToYou(obj){
 	console.log(new Date().getTime(), "Server ", obj.identifier, " just connected to me.");
-	
+
 	// if im already connected to the server that just connected to me
 	let serverThatJustConnectedToMe = serversImConnectedTo.get(obj.identifier);
 	if (serverThatJustConnectedToMe !== undefined){
@@ -437,14 +437,14 @@ function connectToSelf(){
 
 /********************************************************
 TOB ALGORITHM LOGIC
-********************************************************/ 
+********************************************************/
 
 function tobSendUpdate(u){
 	console.log(new Date().getTime(), "Received this update from my browser:");
 	console.log(new Date().getTime(), u);
 
 	myTS.time = myTS.time+1;
-	
+
 	serversImConnectedTo.forEach(function (server){
 		server.socket.emit('FromOtherServer_TobMessageOrAck', {
 			fromIp: myIP,
@@ -466,7 +466,7 @@ function tobReceiveMessageOrAck(obj){
 
 	if (isMessage)
 		Q.enqueue(obj);
-	
+
 	if (obj.TS.time > myTS.time){
 		myTS.time = obj.TS.time;
 
@@ -641,13 +641,13 @@ function sendHeartbeatToServer(){
 			ip: myIP,
 			port: myPort
 		};
-	
+
 		let options = {
 			url: supernodeEndPoint + "/heartbeat",
 			method: 'POST',
 			json: data
 		};
-	
+
 		request(options, (err, res, obj) => {
 			try {
 				if (!Object.keys(obj).length) {
