@@ -17,7 +17,7 @@ const ifaces = require('os').networkInterfaces();
 const lodash = require('lodash');
 const PriorityQueue = require('./priorityQueue.js');
 const short_uuid = require('short-uuid');
-const supernodeEndPoint = "https://central-server-b819d.appspot.com/";
+const supernodeEndPoint = "http://localhost:4000";
 
 module.exports = {
 	initialize: initialize
@@ -145,9 +145,8 @@ function fromBrowser_CreateRoom(newRoomName){
 	};
 
 	request(options, (err, res, body) => {
-		if (res.statusCode === 200) {
+		if (res && res.statusCode === 200) {
 			socketToBrowser.emit('FromServer_Alert', body);
-
 		}
 		else {
 			socketToBrowser.emit('FromServer_Alert', 'Unable to create chatroom');
@@ -218,12 +217,7 @@ function fromBrowser_ConnectToRoom(obj){
 				socketToBrowser.emit('FromServer_EnterChatroom');
 			}
 		} catch (e) {
-			if (err) {
-				console.error(err)
-			}
-			else {
-				console.error('Error occurred connecting to a chatroom: ' + e)
-			}
+			console.error('Error occurred connecting to a chatroom.')
 		}
 	});
 }
@@ -597,35 +591,33 @@ function isChatroomSame(oldChatrooms){
 }
 
 function getChatRooms(){
-	let options = {
-		url: supernodeEndPoint + "/chatrooms",
-		method: 'GET',
-	};
+	// Only send requests if user is not connected to a room, or if the browser connection exists
+	if (socketToBrowser && socketToBrowser.connected && joinedRooms.length === 0) {
+		let options = {
+			url: supernodeEndPoint + "/chatrooms",
+			method: 'GET',
+		};
 
-	const oldChatrooms = chatRooms;
+		const oldChatrooms = chatRooms;
 
-	request(options, (err, res, body) => {
-		try {
-			chatRooms = body ? (JSON.parse(body)).rooms : [];
+		request(options, (err, res, body) => {
+			try {
+				chatRooms = body ? (JSON.parse(body)).rooms : [];
 
-			// if chatrooms is different, send update to browser
-			if (socketToBrowser) {
-				if (!isChatroomSame(oldChatrooms)) {
-					console.log("Chatrooms changed, updating the client");
-					socketToBrowser.emit('FromServer_AvailableRooms', chatRooms);
+				// if chatrooms is different, send update to browser
+				if (socketToBrowser) {
+					if (!isChatroomSame(oldChatrooms)) {
+						console.log("Chatrooms changed, updating the client");
+						socketToBrowser.emit('FromServer_AvailableRooms', chatRooms);
+					}
 				}
 			}
-		}
-		catch (e) {
-			if (err) {
-				console.error(err)
+			catch (e) {
+				console.error('Error getting all chatrooms.')
+				chatRooms = []
 			}
-			else {
-				console.error('Error parsing the body from getting chatrooms: ' + e)
-			}
-			chatRooms = []
-		}
-	});
+		});
+	}
 }
 
 /**
@@ -665,12 +657,7 @@ function sendHeartbeatToServer(){
 				}
 			}
 			catch (e) {
-				if (err) {
-					console.error(err);
-				}
-				else {
-					console.error('Error occurred sending heartbeat: ' + e);
-				}
+				console.error('Error occurred sending heartbeat.');
 			}
 		});
 	});
@@ -711,12 +698,7 @@ function sendLogToServer(room){
 				console.error(res.body)
 			}
 		} catch (e) {
-			if (err) {
-				console.error(err)
-			}
-			else {
-				console.error('Error occurred sending message log to supernode: ' + e);
-			}
+			console.error('Error occurred sending message log to supernode.');
 		}
 	});
 }
