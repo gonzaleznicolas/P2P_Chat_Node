@@ -31,8 +31,8 @@ $(function () {
 	socket.on('FromServer_AvailableRooms', fromServer_AvailableRooms);
 	socket.on('FromServer_ThisIsMyUserDetails', fromServer_ThisIsMyUserDetails);
 	socket.on('FromServer_Alert', (message) => {
-		// TODO: Make this look nicer
-		alert(message);
+		$('#errorMessage').text(message);
+		$('#alertDialog').modal('show');
 	});
 	socket.on('FromServer_EnterChatroom', changeToChatScreen);
 	$("#leaveRoomButton").click( onLeaveRoom );
