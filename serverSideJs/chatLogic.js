@@ -591,30 +591,33 @@ function isChatroomSame(oldChatrooms){
 }
 
 function getChatRooms(){
-	let options = {
-		url: supernodeEndPoint + "/chatrooms",
-		method: 'GET',
-	};
+	// Only send requests if user is not connected to a room, or if the browser connection exists
+	if (socketToBrowser && socketToBrowser.connected && joinedRooms.length === 0) {
+		let options = {
+			url: supernodeEndPoint + "/chatrooms",
+			method: 'GET',
+		};
 
-	const oldChatrooms = chatRooms;
+		const oldChatrooms = chatRooms;
 
-	request(options, (err, res, body) => {
-		try {
-			chatRooms = body ? (JSON.parse(body)).rooms : [];
+		request(options, (err, res, body) => {
+			try {
+				chatRooms = body ? (JSON.parse(body)).rooms : [];
 
-			// if chatrooms is different, send update to browser
-			if (socketToBrowser) {
-				if (!isChatroomSame(oldChatrooms)) {
-					console.log("Chatrooms changed, updating the client");
-					socketToBrowser.emit('FromServer_AvailableRooms', chatRooms);
+				// if chatrooms is different, send update to browser
+				if (socketToBrowser) {
+					if (!isChatroomSame(oldChatrooms)) {
+						console.log("Chatrooms changed, updating the client");
+						socketToBrowser.emit('FromServer_AvailableRooms', chatRooms);
+					}
 				}
 			}
-		}
-		catch (e) {
-			console.error('Error getting all chatrooms.')
-			chatRooms = []
-		}
-	});
+			catch (e) {
+				console.error('Error getting all chatrooms.')
+				chatRooms = []
+			}
+		});
+	}
 }
 
 /**
