@@ -17,7 +17,7 @@ const ifaces = require('os').networkInterfaces();
 const lodash = require('lodash');
 const PriorityQueue = require('./priorityQueue.js');
 const short_uuid = require('short-uuid');
-const supernodeEndPoint = "https://central-server-b819d.appspot.com/";
+const supernodeEndPoint = "http://localhost:4000";
 
 module.exports = {
 	initialize: initialize
@@ -145,9 +145,8 @@ function fromBrowser_CreateRoom(newRoomName){
 	};
 
 	request(options, (err, res, body) => {
-		if (res.statusCode === 200) {
+		if (res && res.statusCode === 200) {
 			socketToBrowser.emit('FromServer_Alert', body);
-
 		}
 		else {
 			socketToBrowser.emit('FromServer_Alert', 'Unable to create chatroom');
@@ -218,12 +217,7 @@ function fromBrowser_ConnectToRoom(obj){
 				socketToBrowser.emit('FromServer_EnterChatroom');
 			}
 		} catch (e) {
-			if (err) {
-				console.error(err)
-			}
-			else {
-				console.error('Error occurred connecting to a chatroom: ' + e)
-			}
+			console.error('Error occurred connecting to a chatroom.')
 		}
 	});
 }
@@ -617,12 +611,7 @@ function getChatRooms(){
 			}
 		}
 		catch (e) {
-			if (err) {
-				console.error(err)
-			}
-			else {
-				console.error('Error parsing the body from getting chatrooms: ' + e)
-			}
+			console.error('Error getting all chatrooms.')
 			chatRooms = []
 		}
 	});
@@ -665,12 +654,7 @@ function sendHeartbeatToServer(){
 				}
 			}
 			catch (e) {
-				if (err) {
-					console.error(err);
-				}
-				else {
-					console.error('Error occurred sending heartbeat: ' + e);
-				}
+				console.error('Error occurred sending heartbeat.');
 			}
 		});
 	});
@@ -711,12 +695,7 @@ function sendLogToServer(room){
 				console.error(res.body)
 			}
 		} catch (e) {
-			if (err) {
-				console.error(err)
-			}
-			else {
-				console.error('Error occurred sending message log to supernode: ' + e);
-			}
+			console.error('Error occurred sending message log to supernode.');
 		}
 	});
 }
